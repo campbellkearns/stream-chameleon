@@ -1,0 +1,5 @@
+# Repo policy for obvious agents — auto-detected from GitHub settings.
+defaultBranch: main
+# GitHub allows merge-commit, squash, and rebase on this repo; squash is the
+# repo default used for agent PRs.
+mergeMethod: squash
