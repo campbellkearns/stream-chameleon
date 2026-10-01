@@ -37,7 +37,7 @@ const STATE_COPY: Record<AgentControlState, AgentControlStateCopy> = {
   unsupported: {
     icon: TriangleAlert,
     label: 'Browser unsupported',
-    description: 'Agent control needs a WebMCP-capable browser, e.g. Chrome 146+.',
+    description: 'Agent control needs a WebMCP-capable browser, e.g. Chrome 150+.',
     colorClassName: 'text-fg-subtle',
   },
 };
@@ -63,7 +63,7 @@ export interface AgentControlIndicatorProps {
 /**
  * Pure presentational indicator. Takes support/auth as props rather than
  * reading the hooks itself, so the three states are directly testable
- * without mocking `navigator.modelContext` or auth.
+ * without mocking `document.modelContext` or auth.
  */
 export function AgentControlIndicator({
   isSupported,

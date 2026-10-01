@@ -1,19 +1,16 @@
 /**
- * Adapter over the WebMCP model context API (webmachinelearning/webmcp).
+ * Adapter over the WebMCP `document.modelContext` API (webmachinelearning/webmcp).
  *
  * Every reference to the browser's model context lives in this one file. Callers use
  * `isModelContextSupported` / `registerModelContextTool` / `unregisterModelContextTool` and never
- * touch the browser object directly, so API reshapes only change this module's internals.
+ * touch `document.modelContext` directly, so API reshapes only change this module's internals.
  *
- * Two shapes are supported, in order of preference:
- * - **Current spec** (Chrome 150+): `document.modelContext.registerTool(tool, { signal })` returns a
- *   promise that rejects on a duplicate name; a tool is unregistered by aborting its signal. Chrome
- *   150 also kept a deprecated `navigator.modelContext` alias of this shape, removed in later builds.
- * - **Earlier draft** (Chrome 146 Canary): `navigator.modelContext.registerTool(tool)` paired with
- *   `unregisterTool(name)`.
+ * Per the spec, `registerTool(tool, { signal })` returns a promise that rejects on a duplicate name,
+ * and a tool is unregistered by aborting the signal it was registered with. This module keeps one
+ * AbortController per tool name so callers can still unregister by name.
  *
- * The API is still experimental (a Chrome origin trial) and absent elsewhere, so every export is a
- * silent no-op, never a throw, when no supported shape is present.
+ * The API is experimental (a Chrome origin trial) and absent elsewhere, so every export is a silent
+ * no-op, never a throw, when `document.modelContext` is missing or doesn't match the expected shape.
  */
 
 /** A single agent-callable tool, in the shape `registerTool` expects. */
@@ -24,65 +21,44 @@ export interface ModelContextTool {
   execute: (input: Record<string, unknown>) => Promise<unknown>;
 }
 
-/** Current spec: registration is async and unregistered through an AbortSignal. */
-interface SignalRegistry {
-  registerTool: (tool: ModelContextTool, options?: { signal?: AbortSignal }) => Promise<void> | void;
+/** The slice of the spec's `ModelContext` this adapter depends on. */
+interface ModelContextRegistry {
+  registerTool: (tool: ModelContextTool, options?: { signal?: AbortSignal }) => Promise<void>;
 }
 
-/** Earlier draft: synchronous registration paired with unregister-by-name. */
-interface NamedRegistry {
-  registerTool: (tool: ModelContextTool) => void;
-  unregisterTool: (name: string) => void;
-}
-
-type Registry = { kind: 'signal'; api: SignalRegistry } | { kind: 'named'; api: NamedRegistry };
-
-/** Abort handles for tools registered through the signal-based API, keyed by tool name. */
+/** Abort handles for registered tools, keyed by tool name. */
 const registrations = new Map<string, AbortController>();
 
-function asObject(value: unknown): Record<string, unknown> | undefined {
-  return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : undefined;
-}
-
 /**
- * Finds the browser's tool registry, preferring the current `document.modelContext` shape, or
- * returns `undefined` when neither shape is present.
+ * Returns the browser's tool registry when it matches the spec's shape, or `undefined` otherwise
+ * (no `document`, no `modelContext`, or an incompatible shape).
  */
-function getRegistry(): Registry | undefined {
-  const fromDocument =
-    typeof document === 'undefined' ? undefined : asObject((document as Document & { modelContext?: unknown }).modelContext);
-  if (fromDocument && typeof fromDocument.registerTool === 'function') {
-    return { kind: 'signal', api: fromDocument as unknown as SignalRegistry };
+function getModelContextRegistry(): ModelContextRegistry | undefined {
+  if (typeof document === 'undefined') {
+    return undefined;
   }
 
-  const fromNavigator =
-    typeof navigator === 'undefined' ? undefined : asObject((navigator as Navigator & { modelContext?: unknown }).modelContext);
-  if (fromNavigator && typeof fromNavigator.registerTool === 'function') {
-    return typeof fromNavigator.unregisterTool === 'function'
-      ? { kind: 'named', api: fromNavigator as unknown as NamedRegistry }
-      : { kind: 'signal', api: fromNavigator as unknown as SignalRegistry };
+  const candidate = (document as Document & { modelContext?: unknown }).modelContext;
+  if (typeof candidate !== 'object' || candidate === null) {
+    return undefined;
   }
 
-  return undefined;
+  const registry = candidate as Partial<ModelContextRegistry>;
+  return typeof registry.registerTool === 'function' ? (registry as ModelContextRegistry) : undefined;
 }
 
-/** True when the current browser exposes a supported WebMCP model context. */
+/** True when the current browser exposes a spec-shaped `document.modelContext`. */
 export function isModelContextSupported(): boolean {
-  return getRegistry() !== undefined;
+  return getModelContextRegistry() !== undefined;
 }
 
 /**
  * Registers a tool with the browser's model context. Silent no-op (no throw) when WebMCP is
- * unsupported; a rejected registration (for example a duplicate name) is logged, not thrown.
+ * unsupported; a rejected registration is logged, not thrown.
  */
 export function registerModelContextTool(tool: ModelContextTool): void {
-  const registry = getRegistry();
+  const registry = getModelContextRegistry();
   if (!registry) {
-    return;
-  }
-
-  if (registry.kind === 'named') {
-    registry.api.registerTool(tool);
     return;
   }
 
@@ -99,26 +75,21 @@ export function registerModelContextTool(tool: ModelContextTool): void {
   };
 
   try {
-    Promise.resolve(registry.api.registerTool(tool, { signal: controller.signal })).catch(handleFailure);
+    Promise.resolve(registry.registerTool(tool, { signal: controller.signal })).catch(handleFailure);
   } catch (error) {
     handleFailure(error);
   }
 }
 
 /**
- * Unregisters a tool by name from the browser's model context. Silent no-op (no throw) when WebMCP
- * is unsupported or the tool isn't registered.
+ * Unregisters a tool by name by aborting its registration signal. Silent no-op when the tool isn't
+ * registered.
  */
 export function unregisterModelContextTool(name: string): void {
   const controller = registrations.get(name);
-  if (controller) {
-    registrations.delete(name);
-    controller.abort();
+  if (!controller) {
     return;
   }
-
-  const registry = getRegistry();
-  if (registry?.kind === 'named') {
-    registry.api.unregisterTool(name);
-  }
+  registrations.delete(name);
+  controller.abort();
 }

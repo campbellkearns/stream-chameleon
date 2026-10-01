@@ -107,7 +107,7 @@ const STATUS = {
     icon: TriangleAlert,
     iconClass: 'text-amber-400',
     title: "This browser doesn't support WebMCP",
-    body: 'Agent control needs a browser that exposes navigator.modelContext, such as Chrome 146+ with WebMCP enabled. Everything else in Stream Chameleon works normally.',
+    body: 'Agent control needs a browser with WebMCP (document.modelContext), such as Chrome 150+ on a site enrolled in the WebMCP origin trial. Everything else in Stream Chameleon works normally.',
   },
 } as const
 

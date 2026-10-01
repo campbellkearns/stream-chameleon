@@ -4,7 +4,7 @@ import { test, expect, type Page } from '@playwright/test';
  * WebMCP end-to-end coverage (spec deliverable 5, art_H22sCdEk).
  *
  * No real WebMCP-capable browser runs in CI, so these specs stand in for the browser's side of
- * the contract: `navigator.modelContext` is replaced — via `addInitScript`, before the app's own
+ * the contract: `document.modelContext` is replaced — via `addInitScript`, before the app's own
  * script runs — with a minimal registry that records whatever `useWebMCP` registers. "The agent
  * calls a tool" is then invoking the captured `execute` function directly: exactly what a real
  * WebMCP browser does when the user's agent invokes a tool the page registered by name.
@@ -18,32 +18,13 @@ const TOOL_NAMES = ['activate_stream_profile', 'list_stream_profiles', 'update_s
 
 type MockTool = { name: string; execute: (input: Record<string, unknown>) => Promise<unknown> };
 
-/** Installs the mock `navigator.modelContext` registry `useWebMCP` registers tools into. */
-async function mockModelContext(page: Page): Promise<void> {
-  await page.addInitScript(() => {
-    const tools = new Map<string, MockTool>();
-    (window as unknown as { __webmcpTools: Map<string, MockTool> }).__webmcpTools = tools;
-
-    Object.defineProperty(window.navigator, 'modelContext', {
-      configurable: true,
-      value: {
-        registerTool: (tool: MockTool) => {
-          tools.set(tool.name, tool);
-        },
-        unregisterTool: (name: string) => {
-          tools.delete(name);
-        },
-      },
-    });
-  });
-}
-
 /**
- * Installs a mock `document.modelContext` in the current spec's shape: async `registerTool(tool,
- * { signal })` that rejects duplicate names, unregistered by aborting the signal. Shares
- * `window.__webmcpTools` with the draft mock, so the same helpers read either.
+ * Installs a mock `document.modelContext` in the spec's shape: async `registerTool(tool, { signal })`
+ * that rejects a name already registered, unregistered by aborting the signal. The duplicate check
+ * matters: React StrictMode registers, unregisters, and re-registers on mount, so a leaked
+ * registration would surface here as a rejection.
  */
-async function mockDocumentModelContext(page: Page): Promise<void> {
+async function mockModelContext(page: Page): Promise<void> {
   await page.addInitScript(() => {
     const tools = new Map<string, MockTool>();
     (window as unknown as { __webmcpTools: Map<string, MockTool> }).__webmcpTools = tools;
@@ -309,26 +290,5 @@ test.describe('WebMCP agent tools', () => {
 
     expect(result).toMatchObject({ ok: false, kind: 'auth_required' });
     expect(channelUpdateBodies).toHaveLength(0);
-  });
-
-  test('registers through document.modelContext (current spec) and an agent call still applies', async ({ page }) => {
-    await mockDocumentModelContext(page);
-    const now = Date.now();
-    const profile: SeededProfile = {
-      id: 'webmcp-e2e-document',
-      name: 'Coding Session',
-      category: { id: '509670', name: 'Software and Game Development' },
-      title: 'Building Stream Chameleon live',
-      tags: ['coding'],
-    };
-    await seedFixtures(page, { tokenObtainedAtMs: now, tokenExpiresAtMs: now + 60 * 60 * 1000, profile });
-    const channelUpdateBodies = await mockChannelsEndpoint(page);
-
-    await page.goto('/');
-    await expect.poll(() => registeredToolNames(page), { timeout: 15_000 }).toEqual(TOOL_NAMES);
-
-    const result = await callTool(page, 'activate_stream_profile', { profile: 'coding session' });
-    expect(result).toMatchObject({ ok: true });
-    await expect.poll(() => channelUpdateBodies.length, { timeout: 15_000 }).toBe(1);
   });
 });

@@ -36,7 +36,7 @@ describe('AgentControlIndicator', () => {
     const html = renderToStaticMarkup(<AgentControlIndicator isSupported={false} isAuthenticated={true} />);
 
     expect(html).toContain('Browser unsupported');
-    expect(html).toContain('Chrome 146');
+    expect(html).toContain('Chrome 150');
     expect(html).toContain('data-agent-control-state="unsupported"');
   });
 

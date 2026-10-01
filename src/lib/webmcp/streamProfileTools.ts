@@ -189,7 +189,7 @@ async function updateDirect(
 }
 
 /**
- * Builds the three tools in the shape `navigator.modelContext.registerTool` expects.
+ * Builds the three tools in the shape `document.modelContext.registerTool` expects.
  *
  * The returned array is stable content-wise but freshly allocated per call — callers should
  * memoize it so the registration effect doesn't churn.
