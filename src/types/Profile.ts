@@ -24,6 +24,17 @@ export interface StreamCategory {
 export type StreamTags = string[];
 
 /**
+ * Accent colors a preset can use, kept to a fixed set so styling stays
+ * consistent and Tailwind can see every class at build time
+ */
+export const PRESET_ACCENTS = ['indigo', 'emerald', 'amber', 'purple', 'rose', 'cyan'] as const;
+export type AccentKey = typeof PRESET_ACCENTS[number];
+
+/** Fallbacks for presets saved before icon/accent existed */
+export const DEFAULT_PRESET_ICON = '🎮';
+export const DEFAULT_PRESET_ACCENT: AccentKey = 'indigo';
+
+/**
  * Main Stream Profile entity
  * 
  * Contains all information needed to apply a complete stream configuration
@@ -52,6 +63,12 @@ export interface StreamProfile {
   
   /** Stream tags (maximum 10) */
   tags: string[];
+
+  /** Single emoji shown on cards and Quick Morph chips */
+  icon?: string;
+
+  /** Accent color for the card edge and icon tile */
+  accent?: AccentKey;
   
   /** Profile creation timestamp */
   createdAt: Date;
@@ -69,6 +86,8 @@ export interface CreateProfileInput {
   category: StreamCategory;
   title: string;
   tags: string[];
+  icon?: string;
+  accent?: AccentKey;
 }
 
 /**
@@ -106,7 +125,9 @@ export const PROFILE_VALIDATION_ERRORS = {
   CATEGORY_REQUIRED: 'CATEGORY_REQUIRED',
   TAGS_TOO_MANY: 'TAGS_TOO_MANY',
   TAG_TOO_LONG: 'TAG_TOO_LONG',
-  TAG_INVALID_CHARS: 'TAG_INVALID_CHARS'
+  TAG_INVALID_CHARS: 'TAG_INVALID_CHARS',
+  ICON_INVALID: 'ICON_INVALID',
+  ACCENT_INVALID: 'ACCENT_INVALID'
 } as const;
 
 /**

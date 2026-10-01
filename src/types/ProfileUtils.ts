@@ -12,7 +12,8 @@ import {
   ProfileValidationError,
   ProcessedTitle,
   PROFILE_VALIDATION_ERRORS,
-  TITLE_TEMPLATES
+  TITLE_TEMPLATES,
+  PRESET_ACCENTS
 } from '../types/Profile';
 
 /**
@@ -39,6 +40,8 @@ export function createProfile(input: CreateProfileInput): StreamProfile {
     category: input.category,
     title: input.title.trim(),
     tags: input.tags.map(tag => tag.trim()).filter(tag => tag.length > 0),
+    icon: input.icon?.trim() || undefined,
+    accent: input.accent,
     createdAt: now,
     updatedAt: now
   };
@@ -131,10 +134,42 @@ export function validateProfile(input: CreateProfileInput): ProfileValidationRes
     }
   });
 
+  // Validate icon: one emoji or character
+  if (input.icon !== undefined && countGraphemes(input.icon.trim()) > 1) {
+    errors.push({
+      field: 'icon',
+      message: 'Icon must be a single emoji or character',
+      code: PROFILE_VALIDATION_ERRORS.ICON_INVALID
+    });
+  }
+
+  // Validate accent against the fixed palette
+  if (input.accent !== undefined && !(PRESET_ACCENTS as readonly string[]).includes(input.accent)) {
+    errors.push({
+      field: 'accent',
+      message: `Accent must be one of: ${PRESET_ACCENTS.join(', ')}`,
+      code: PROFILE_VALIDATION_ERRORS.ACCENT_INVALID
+    });
+  }
+
   return {
     isValid: errors.length === 0,
     errors
   };
+}
+
+/**
+ * Count user-perceived characters, so multi-codepoint emoji like 👩‍💻 count as one
+ */
+export function countGraphemes(text: string): number {
+  // Intl.Segmenter isn't in this project's TS lib target, so type the bit we use
+  const Segmenter = (Intl as unknown as {
+    Segmenter?: new (locale: undefined, options: { granularity: 'grapheme' }) => { segment(input: string): Iterable<unknown> };
+  }).Segmenter;
+  if (Segmenter) {
+    return [...new Segmenter(undefined, { granularity: 'grapheme' }).segment(text)].length;
+  }
+  return [...text].length;
 }
 
 /**

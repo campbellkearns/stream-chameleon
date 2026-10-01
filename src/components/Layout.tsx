@@ -4,6 +4,7 @@ import { Radio, Layers, LogOut, Link2, Zap } from 'lucide-react'
 import { useAuthState } from '@/hooks/useAuth'
 import { getTwitchAuth } from '@/lib/auth/twitchAuth'
 import { StreamControlProvider, useStreamControl } from '@/hooks/useStreamControl'
+import { presetIcon } from '@/lib/presetStyle'
 
 const TABS = [
   { to: '/', label: 'Live', icon: Radio, end: true },
@@ -35,7 +36,7 @@ function QuickMorphChips() {
                 : 'bg-surface border-line text-fg-muted hover:bg-raised hover:text-fg'
             }`}
           >
-            {isApplying && <Zap className="w-3 h-3 text-accent-fg" />}
+            {isApplying ? <Zap className="w-3 h-3 text-accent-fg" /> : <span aria-hidden="true">{presetIcon(profile)}</span>}
             <span className="max-w-28 truncate">{profile.name}</span>
           </button>
         )

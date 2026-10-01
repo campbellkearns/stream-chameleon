@@ -4,6 +4,7 @@ import type { StreamProfile } from '@/types/Profile'
 import { useStreamControl } from '@/hooks/useStreamControl'
 import { processTitle } from '@/types/ProfileUtils'
 import { getTwitchStatusURL } from '@/hooks/useAPIHealth'
+import { presetAccent, presetIcon } from '@/lib/presetStyle'
 
 export default function Presets() {
   const {
@@ -101,17 +102,26 @@ export default function Presets() {
             const processedTitle = processTitle(profile.title)
             const isActive = activeProfileId === profile.id
             const isApplying = applyingProfileId === profile.id
+            const accent = presetAccent(profile)
 
             return (
               <article
                 key={profile.id}
                 data-testid="preset-card"
-                className={`card flex flex-col ${isActive ? 'border-accent' : ''}`}
+                className={`card flex flex-col border-l-[3px] ${accent.edge} ${isActive ? 'border-t-accent border-r-accent border-b-accent' : ''}`}
               >
                 <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="min-w-0">
-                    <h2 className="font-semibold text-fg-strong truncate">{profile.name}</h2>
-                    <p className="text-xs font-semibold text-accent-fg mt-0.5">{profile.category.name}</p>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span
+                      className={`w-10 h-10 rounded-lg ${accent.fill} flex items-center justify-center text-xl shrink-0`}
+                      aria-hidden="true"
+                    >
+                      {presetIcon(profile)}
+                    </span>
+                    <div className="min-w-0">
+                      <h2 className="font-semibold text-fg-strong truncate">{profile.name}</h2>
+                      <p className="text-xs font-semibold text-accent-fg mt-0.5 truncate">{profile.category.name}</p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     {isActive && (

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useCategorySearch, useCategories } from '@/hooks/useCategories';
 import type { StreamCategory } from '@/types/Profile';
+import { boxArtSrc } from '@/lib/presetStyle';
 
 interface CategorySearchDropdownProps {
   value: StreamCategory | null;
@@ -202,7 +203,7 @@ export function CategorySearchDropdown({
                         {/* Category icon/artwork placeholder */}
                         {category.boxArtUrl ? (
                           <img
-                            src={category.boxArtUrl}
+                            src={boxArtSrc(category.boxArtUrl, 80, 112)}
                             alt=""
                             className="w-10 h-14 object-cover rounded"
                             loading="lazy"

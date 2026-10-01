@@ -6,6 +6,8 @@ import type { TwitchChannelResponse } from '@/types/TwitchAPI'
 import { useStreamControl } from '@/hooks/useStreamControl'
 import { useAuthState } from '@/hooks/useAuth'
 import { CategorySearchDropdown } from '@/components/CategorySearchDropdown'
+import { RecentCategoryGrid } from '@/components/RecentCategoryGrid'
+import { presetAccent, presetIcon } from '@/lib/presetStyle'
 import { processTitle, titleHasTemplates } from '@/types/ProfileUtils'
 
 const MAX_TITLE_LENGTH = 140
@@ -218,6 +220,10 @@ function BroadcastEditor() {
           value={draft.category}
           onChange={(category) => setDraft((prev) => ({ ...prev, category }))}
         />
+        <RecentCategoryGrid
+          value={draft.category}
+          onChange={(category) => setDraft((prev) => ({ ...prev, category }))}
+        />
       </div>
 
       <div>
@@ -320,9 +326,17 @@ function PresetQuickList() {
                 key={profile.id}
                 className={`flex items-center justify-between gap-3 p-3 rounded-lg bg-raised border ${isActive ? 'border-accent' : 'border-line'}`}
               >
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-fg-strong truncate">{profile.name}</p>
-                  <p className="text-xs text-fg-muted truncate">{profile.category.name}</p>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span
+                    className={`w-8 h-8 rounded-md ${presetAccent(profile).fill} flex items-center justify-center text-base shrink-0`}
+                    aria-hidden="true"
+                  >
+                    {presetIcon(profile)}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-fg-strong truncate">{profile.name}</p>
+                    <p className="text-xs text-fg-muted truncate">{profile.category.name}</p>
+                  </div>
                 </div>
                 <button
                   onClick={() => applyProfile(profile)}
