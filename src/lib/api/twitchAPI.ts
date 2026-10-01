@@ -69,6 +69,19 @@ export class TwitchAPIClient {
    * Apply a stream profile to update channel information
    */
   async applyProfile(profile: StreamProfile): Promise<APIResult<boolean>> {
+    this.log('Applying profile to Twitch', { profileName: profile.name });
+
+    return this.updateChannel({
+      game_id: profile.category.id,
+      title: processTitle(profile.title).processed,
+      tags: profile.tags
+    });
+  }
+
+  /**
+   * Update the authenticated broadcaster's channel information
+   */
+  async updateChannel(request: UpdateChannelRequest): Promise<APIResult<boolean>> {
     try {
       // Get authenticated user and token
       const [user, token] = await Promise.all([
@@ -86,21 +99,12 @@ export class TwitchAPIClient {
         };
       }
 
-      // Process dynamic title templates
-      const processedTitle = processTitle(profile.title);
-
-      // Prepare update request
       const updateRequest: UpdateChannelRequest = {
-        game_id: profile.category.id,
-        title: processedTitle.processed,
-        tags: profile.tags.slice(0, 10) // Ensure max 10 tags
+        ...request,
+        tags: request.tags?.slice(0, 10) // Ensure max 10 tags
       };
 
-      this.log('Applying profile to Twitch', { 
-        profileName: profile.name,
-        userId: user.id,
-        updateRequest 
-      });
+      this.log('Updating channel', { userId: user.id, updateRequest });
 
       // Make API request to update channel
       const response = await fetch(
@@ -132,7 +136,7 @@ export class TwitchAPIClient {
         };
       }
 
-      this.log('Stream updated successfully', { profileName: profile.name });
+      this.log('Stream updated successfully');
 
       return {
         success: true,
@@ -141,7 +145,7 @@ export class TwitchAPIClient {
       };
 
     } catch (error) {
-      this.logError('Error applying profile', error);
+      this.logError('Error updating channel', error);
       
       if (error instanceof Error && error.name === 'AbortError') {
         return {

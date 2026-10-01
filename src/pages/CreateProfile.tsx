@@ -1,23 +1,27 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useStreamControl } from '@/hooks/useStreamControl'
 import { useToast } from '@/components/Toast'
 import { CategorySearchDropdown } from '@/components/CategorySearchDropdown'
 import type { CreateProfileInput, StreamCategory } from '@/types/Profile'
+import type { PresetPrefill } from '@/pages/LiveController'
 
 export default function CreateProfile(): JSX.Element {
   const navigate = useNavigate()
+  const location = useLocation()
+  // Set when arriving from the Live tab's "Save as Preset"
+  const prefill = (location.state as { prefill?: PresetPrefill } | null)?.prefill
   const { createProfile, isLoading } = useStreamControl()
   const { showToast } = useToast()
   
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    title: '',
-    tags: ''
+    title: prefill?.title ?? '',
+    tags: prefill?.tags.join(', ') ?? ''
   })
 
-  const [selectedCategory, setSelectedCategory] = useState<StreamCategory | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<StreamCategory | null>(prefill?.category ?? null)
   
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)

@@ -6,7 +6,8 @@ import { getTwitchAuth } from '@/lib/auth/twitchAuth'
 import { StreamControlProvider, useStreamControl } from '@/hooks/useStreamControl'
 
 const TABS = [
-  { to: '/presets', label: 'Presets', icon: Layers },
+  { to: '/', label: 'Live', icon: Radio, end: true },
+  { to: '/presets', label: 'Presets', icon: Layers, end: false },
 ]
 
 const MAX_QUICK_MORPH_CHIPS = 5
@@ -125,10 +126,11 @@ export default function Layout() {
         <nav className="border-b border-line">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-2 flex items-end justify-between gap-4 overflow-x-auto">
             <div className="flex items-center gap-1">
-              {TABS.map(({ to, label, icon: Icon }) => (
+              {TABS.map(({ to, label, icon: Icon, end }) => (
                 <NavLink
                   key={to}
                   to={to}
+                  end={end}
                   className={({ isActive }) =>
                     `flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
                       isActive

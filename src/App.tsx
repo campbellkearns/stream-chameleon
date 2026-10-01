@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
+import LiveController from './pages/LiveController';
 import Presets from './pages/Presets';
 import CreateProfile from './pages/CreateProfile';
 import EditProfile from './pages/EditProfile';
@@ -32,8 +33,7 @@ function App(): JSX.Element {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
-        {/* Live controller replaces this redirect */}
-        <Route index element={<Navigate to="/presets" replace />} />
+        <Route index element={<LiveController />} />
         <Route path="presets" element={<Presets />} />
         <Route path="profile/new" element={<CreateProfile />} />
         <Route path="profile/:id/edit" element={<EditProfile />} />
