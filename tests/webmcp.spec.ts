@@ -38,6 +38,32 @@ async function mockModelContext(page: Page): Promise<void> {
   });
 }
 
+/**
+ * Installs a mock `document.modelContext` in the current spec's shape: async `registerTool(tool,
+ * { signal })` that rejects duplicate names, unregistered by aborting the signal. Shares
+ * `window.__webmcpTools` with the draft mock, so the same helpers read either.
+ */
+async function mockDocumentModelContext(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const tools = new Map<string, MockTool>();
+    (window as unknown as { __webmcpTools: Map<string, MockTool> }).__webmcpTools = tools;
+
+    Object.defineProperty(document, 'modelContext', {
+      configurable: true,
+      value: {
+        registerTool: async (tool: MockTool, options?: { signal?: AbortSignal }) => {
+          if (tools.has(tool.name)) {
+            throw new DOMException(`Tool "${tool.name}" is already registered`, 'InvalidStateError');
+          }
+          if (options?.signal?.aborted) return;
+          tools.set(tool.name, tool);
+          options?.signal?.addEventListener('abort', () => tools.delete(tool.name));
+        },
+      },
+    });
+  });
+}
+
 /** Mocks the Twitch Helix calls every authenticated mount makes: the health check and user lookup. */
 async function mockTwitchSession(page: Page): Promise<void> {
   await page.route('**/api.twitch.tv/helix/games*', async (route) => {
@@ -283,5 +309,26 @@ test.describe('WebMCP agent tools', () => {
 
     expect(result).toMatchObject({ ok: false, kind: 'auth_required' });
     expect(channelUpdateBodies).toHaveLength(0);
+  });
+
+  test('registers through document.modelContext (current spec) and an agent call still applies', async ({ page }) => {
+    await mockDocumentModelContext(page);
+    const now = Date.now();
+    const profile: SeededProfile = {
+      id: 'webmcp-e2e-document',
+      name: 'Coding Session',
+      category: { id: '509670', name: 'Software and Game Development' },
+      title: 'Building Stream Chameleon live',
+      tags: ['coding'],
+    };
+    await seedFixtures(page, { tokenObtainedAtMs: now, tokenExpiresAtMs: now + 60 * 60 * 1000, profile });
+    const channelUpdateBodies = await mockChannelsEndpoint(page);
+
+    await page.goto('/');
+    await expect.poll(() => registeredToolNames(page), { timeout: 15_000 }).toEqual(TOOL_NAMES);
+
+    const result = await callTool(page, 'activate_stream_profile', { profile: 'coding session' });
+    expect(result).toMatchObject({ ok: true });
+    await expect.poll(() => channelUpdateBodies.length, { timeout: 15_000 }).toBe(1);
   });
 });
