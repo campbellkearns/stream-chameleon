@@ -23,7 +23,7 @@ The PWA configuration expects these icon files in the `/public` directory:
 ⏳ Update index.html with proper favicon references
 
 ### Design Details:
-- **Primary Color**: #86EFAC (sage green)
-- **Background**: #FAFAF9 (warm white)
-- **Style**: Scandinavian minimalist with broadcast/streaming theme
+- **Symbol Color**: #6366F1 (indigo), solid
+- **Background**: #0D0E12 (near-black), solid
+- **Style**: Flat. No gradients, glows, tinted rings or opacity fades
 - **Symbol**: Abstract radio waves + profile card representation

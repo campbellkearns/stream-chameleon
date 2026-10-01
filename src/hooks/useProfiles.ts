@@ -9,7 +9,6 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { StreamProfile, CreateProfileInput, UpdateProfileInput } from '@/types/Profile';
 import { getProfileRepository, type RepositoryResult } from '@/repositories/ProfileRepository';
 import { processTitle } from '@/types/ProfileUtils';
-import { getTwitchAPI, isAuthError, isNetworkError } from '@/lib/api/twitchAPI';
 
 /**
  * Loading state interface
@@ -210,50 +209,6 @@ export const useProfiles = () => {
     loadProfiles();
   }, [loadProfiles]);
 
-  /**
-   * Apply a profile to Twitch stream
-   */
-  const applyProfile = useCallback(async (profile: StreamProfile): Promise<boolean> => {
-    try {
-      const twitchAPI = getTwitchAPI();
-      const result = await twitchAPI.applyProfile(profile);
-      
-      if (result.success) {
-        console.log(`Successfully applied profile "${profile.name}" to Twitch stream`);
-        return true;
-      } else {
-        console.error('Failed to apply profile:', result.error);
-        
-        // Handle specific error types
-        if (isAuthError(result.error)) {
-          setLoadingState(prev => ({
-            ...prev,
-            error: 'Authentication required. Please sign in to apply profiles to your stream.'
-          }));
-        } else if (isNetworkError(result.error)) {
-          setLoadingState(prev => ({
-            ...prev,
-            error: 'Network error. Please check your connection and try again.'
-          }));
-        } else {
-          setLoadingState(prev => ({
-            ...prev,
-            error: result.error?.message || 'Failed to apply profile to stream'
-          }));
-        }
-        
-        return false;
-      }
-    } catch (error) {
-      console.error('Error applying profile:', error);
-      setLoadingState(prev => ({
-        ...prev,
-        error: error instanceof Error ? error.message : 'An unexpected error occurred'
-      }));
-      return false;
-    }
-  }, []);
-
   // Computed values
   const computedValues = useMemo(() => ({
     profileCount: profiles.length,
@@ -286,7 +241,6 @@ export const useProfiles = () => {
     getProfile,
     searchProfiles,
     refreshProfiles,
-    applyProfile,
     
     // Utils
     clearError,

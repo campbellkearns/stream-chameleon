@@ -1,49 +1,46 @@
 <svg width="1170" height="2532" viewBox="0 0 1170 2532" fill="none" xmlns="http://www.w3.org/2000/svg">
   <!-- iPhone 12/13/14 Pro Max Portrait Splash Screen -->
-  <rect width="1170" height="2532" fill="#FAFAF9"/>
+  <rect width="1170" height="2532" fill="#0D0E12"/>
   
-  <!-- Subtle background pattern -->
-  <circle cx="585" cy="1266" r="800" fill="#F0FDF4" opacity="0.4"/>
-  <circle cx="585" cy="1266" r="500" fill="#F0FDF4" opacity="0.2"/>
   
   <!-- Centered App Icon -->
   <g transform="translate(435, 1116)">
     <!-- Main Icon (300x300) -->
-    <circle cx="150" cy="150" r="150" fill="#F0FDF4"/>
-    <circle cx="150" cy="150" r="130" fill="#FAFAF9"/>
+    <circle cx="150" cy="150" r="150" fill="#0D0E12"/>
+    <circle cx="150" cy="150" r="130" fill="#0D0E12"/>
     
     <!-- Streaming Symbol -->
-    <g transform="translate(37.5, 37.5)" stroke="#86EFAC" stroke-width="9" fill="none" stroke-linecap="round">
-      <path d="M112.5 56.25 C157.5 56.25, 168.75 80.625, 168.75 112.5 C168.75 144.375, 157.5 168.75, 112.5 168.75" opacity="1"/>
-      <path d="M112.5 28.125 C185.625 28.125, 196.875 66.5625, 196.875 112.5 C196.875 158.4375, 185.625 196.875, 112.5 196.875" opacity="0.7"/>
-      <path d="M112.5 0 C213.75 0, 225 52.5, 225 112.5 C225 172.5, 213.75 225, 112.5 225" opacity="0.4"/>
+    <g transform="translate(37.5, 37.5)" stroke="#6366F1" stroke-width="9" fill="none" stroke-linecap="round">
+      <path d="M112.5 56.25 C157.5 56.25, 168.75 80.625, 168.75 112.5 C168.75 144.375, 157.5 168.75, 112.5 168.75"/>
+      <path d="M112.5 28.125 C185.625 28.125, 196.875 66.5625, 196.875 112.5 C196.875 158.4375, 185.625 196.875, 112.5 196.875"/>
+      <path d="M112.5 0 C213.75 0, 225 52.5, 225 112.5 C225 172.5, 213.75 225, 112.5 225"/>
     </g>
     
     <!-- Central Point -->
-    <circle cx="150" cy="150" r="12" fill="#86EFAC"/>
-    <circle cx="150" cy="150" r="6" fill="#FAFAF9"/>
+    <circle cx="150" cy="150" r="12" fill="#6366F1"/>
+    <circle cx="150" cy="150" r="6" fill="#0D0E12"/>
     
     <!-- Profile Card -->
-    <rect x="60" y="123" width="63" height="27" rx="6" fill="#86EFAC" opacity="0.8"/>
-    <rect x="66" y="129" width="13.5" height="13.5" rx="3" fill="#FAFAF9"/>
-    <rect x="84" y="131.25" width="27" height="3" rx="1.5" fill="#FAFAF9"/>
-    <rect x="84" y="137.25" width="21" height="3" rx="1.5" fill="#FAFAF9"/>
+    <rect x="60" y="123" width="63" height="27" rx="6" fill="#6366F1"/>
+    <rect x="66" y="129" width="13.5" height="13.5" rx="3" fill="#0D0E12"/>
+    <rect x="84" y="131.25" width="27" height="3" rx="1.5" fill="#0D0E12"/>
+    <rect x="84" y="137.25" width="21" height="3" rx="1.5" fill="#0D0E12"/>
   </g>
   
   <!-- App Name -->
-  <text x="585" y="1550" text-anchor="middle" fill="#1F2937" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="500">
+  <text x="585" y="1550" text-anchor="middle" fill="#E2E8F0" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="500">
     Stream Chameleon
   </text>
   
   <!-- Subtitle -->
-  <text x="585" y="1610" text-anchor="middle" fill="#78716C" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="400">
+  <text x="585" y="1610" text-anchor="middle" fill="#94A3B8" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="400">
     Stream Profile Manager
   </text>
   
   <!-- Loading indicator -->
   <g transform="translate(555, 1680)">
-    <circle cx="30" cy="30" r="30" fill="none" stroke="#86EFAC" stroke-width="3" opacity="0.3"/>
-    <circle cx="30" cy="30" r="30" fill="none" stroke="#86EFAC" stroke-width="3" stroke-linecap="round" 
+    <circle cx="30" cy="30" r="30" fill="none" stroke="#1E293B" stroke-width="3"/>
+    <circle cx="30" cy="30" r="30" fill="none" stroke="#6366F1" stroke-width="3" stroke-linecap="round" 
             stroke-dasharray="47.124" stroke-dashoffset="47.124">
       <animateTransform attributeName="transform" attributeType="XML" type="rotate" 
                         from="0 30 30" to="360 30 30" dur="2s" repeatCount="indefinite"/>

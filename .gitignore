@@ -34,3 +34,4 @@ playwright/.cache/
 *.njsproj
 *.sln
 *.sw?
+/llm_context

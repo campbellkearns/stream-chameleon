@@ -1,20 +1,20 @@
 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
   <!-- Background -->
-  <rect width="32" height="32" rx="6" fill="#FAFAF9"/>
+  <rect width="32" height="32" rx="6" fill="#0D0E12"/>
   
   <!-- Simplified streaming symbol -->
   <g transform="translate(8, 8)">
     <!-- Broadcast waves - simplified for small size -->
-    <g stroke="#86EFAC" stroke-width="1.5" fill="none" stroke-linecap="round">
-      <path d="M8 4 C11 4, 12 5.5, 12 8 C12 10.5, 11 12, 8 12" opacity="1"/>
-      <path d="M8 2 C13 2, 14 4.5, 14 8 C14 11.5, 13 14, 8 14" opacity="0.7"/>
+    <g stroke="#6366F1" stroke-width="1.5" fill="none" stroke-linecap="round">
+      <path d="M8 4 C11 4, 12 5.5, 12 8 C12 10.5, 11 12, 8 12"/>
+      <path d="M8 2 C13 2, 14 4.5, 14 8 C14 11.5, 13 14, 8 14"/>
     </g>
     
     <!-- Central point -->
-    <circle cx="8" cy="8" r="2" fill="#86EFAC"/>
-    <circle cx="8" cy="8" r="1" fill="#FAFAF9"/>
+    <circle cx="8" cy="8" r="2" fill="#6366F1"/>
+    <circle cx="8" cy="8" r="1" fill="#0D0E12"/>
     
     <!-- Mini profile indicator -->
-    <rect x="2" y="7" width="4" height="2" rx="1" fill="#86EFAC" opacity="0.8"/>
+    <rect x="2" y="7" width="4" height="2" rx="1" fill="#6366F1"/>
   </g>
 </svg>

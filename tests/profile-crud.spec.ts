@@ -8,15 +8,15 @@ import { test, expect } from '@playwright/test';
 test.describe('Profile Management', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to the app
-    await page.goto('/');
+    await page.goto('/presets');
 
     // Wait for app to load
-    await page.waitForSelector('h1:has-text("Stream Profiles")', { timeout: 10000 });
+    await page.waitForSelector('h1:has-text("Presets")', { timeout: 10000 });
   });
 
   test('should create a new profile', async ({ page }) => {
-    // Click "New Profile" button
-    await page.click('a:has-text("New Profile")');
+    // Click "New Preset" button
+    await page.click('a:has-text("New Preset")');
 
     // Wait for create form
     await expect(page).toHaveURL(/\/profile\/new/);
@@ -38,19 +38,19 @@ test.describe('Profile Management', () => {
     await page.fill('input[name="tags"]', 'test, automated');
 
     // Submit the form
-    await page.click('button:has-text("Create Profile")');
+    await page.click('button:has-text("Create Preset")');
 
-    // Should redirect to dashboard
-    await expect(page).toHaveURL('/', { timeout: 5000 });
+    // Should redirect to presets
+    await expect(page).toHaveURL('/presets', { timeout: 5000 });
 
     // Profile should appear in the list
-    await expect(page.locator('text=Test Profile')).toBeVisible();
+    await expect(page.locator('[data-testid="preset-card"]', { hasText: 'Test Profile' })).toBeVisible();
   });
 
   test('should list existing profiles', async ({ page }) => {
     // Check if we have profiles or empty state
-    const hasProfiles = await page.locator('article.scandi-card').count() > 0;
-    const hasEmptyState = await page.locator('text=No profiles yet').isVisible();
+    const hasProfiles = await page.locator('[data-testid="preset-card"]').count() > 0;
+    const hasEmptyState = await page.locator('text=No presets yet').isVisible();
 
     // Either we should see profiles or the empty state
     expect(hasProfiles || hasEmptyState).toBeTruthy();
@@ -58,7 +58,7 @@ test.describe('Profile Management', () => {
 
   test('should edit an existing profile', async ({ page }) => {
     // First create a profile if none exist
-    const profileCards = await page.locator('article.scandi-card').count();
+    const profileCards = await page.locator('[data-testid="preset-card"]').count();
 
     if (profileCards === 0) {
       // Create a test profile first
@@ -73,12 +73,12 @@ test.describe('Profile Management', () => {
       const musicOption = page.locator('button[role="option"]:has-text("Music")').first();
       await musicOption.click();
 
-      await page.click('button:has-text("Create Profile")');
-      await page.waitForURL('/');
+      await page.click('button:has-text("Create Preset")');
+      await page.waitForURL('/presets');
     }
 
     // Hover over profile card to reveal edit button
-    const firstProfileCard = page.locator('article.scandi-card').first();
+    const firstProfileCard = page.locator('[data-testid="preset-card"]').first();
     await firstProfileCard.hover();
 
     // Click edit button
@@ -94,8 +94,8 @@ test.describe('Profile Management', () => {
     // Save changes
     await page.click('button:has-text("Save Changes")');
 
-    // Should redirect back to dashboard
-    await expect(page).toHaveURL('/');
+    // Should redirect back to presets
+    await expect(page).toHaveURL('/presets');
 
     // Updated title should be visible
     await expect(page.locator('text=Updated Title')).toBeVisible();
@@ -103,7 +103,7 @@ test.describe('Profile Management', () => {
 
   test('should delete a profile', async ({ page }) => {
     // First ensure we have a profile to delete
-    const profileCards = await page.locator('article.scandi-card').count();
+    const profileCards = await page.locator('[data-testid="preset-card"]').count();
 
     if (profileCards === 0) {
       // Create a test profile first
@@ -118,15 +118,15 @@ test.describe('Profile Management', () => {
       const artOption = page.locator('button[role="option"]:has-text("Art")').first();
       await artOption.click();
 
-      await page.click('button:has-text("Create Profile")');
-      await page.waitForURL('/');
+      await page.click('button:has-text("Create Preset")');
+      await page.waitForURL('/presets');
     }
 
     // Count profiles before deletion
-    const initialCount = await page.locator('article.scandi-card').count();
+    const initialCount = await page.locator('[data-testid="preset-card"]').count();
 
     // Hover over profile card to reveal delete button
-    const profileToDelete = page.locator('article.scandi-card').first();
+    const profileToDelete = page.locator('[data-testid="preset-card"]').first();
     await profileToDelete.hover();
 
     // Set up dialog handler before clicking delete
@@ -139,15 +139,15 @@ test.describe('Profile Management', () => {
     await page.waitForTimeout(1000);
 
     // Profile count should decrease or show empty state
-    const finalCount = await page.locator('article.scandi-card').count();
-    const showsEmptyState = await page.locator('text=No profiles yet').isVisible();
+    const finalCount = await page.locator('[data-testid="preset-card"]').count();
+    const showsEmptyState = await page.locator('text=No presets yet').isVisible();
 
     expect(finalCount < initialCount || showsEmptyState).toBeTruthy();
   });
 
   test('should show profile count', async ({ page }) => {
-    // The dashboard should show profile count
-    const countText = page.locator('text=/\\d+ profile/i, text=No profiles yet');
+    // The presets page should show the preset count
+    const countText = page.locator('text=/\\d+ preset/i, text=No presets yet');
     await expect(countText).toBeVisible();
   });
 });

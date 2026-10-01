@@ -63,14 +63,14 @@ export default function SupportPage(): JSX.Element {
     <div>
       {/* Header Section */}
       <div className="mb-8">
-        <h1 className="text-4xl font-medium text-neutral-900 mb-3">
+        <h1 className="text-4xl font-medium text-fg-strong mb-3">
           Support Development
         </h1>
-        <p className="text-lg text-neutral-600">
+        <p className="text-lg text-fg-muted">
           Stream Chameleon is free and always will be. Your support helps me
           maintain the app and add new features.
         </p>
-        <p className="text-lg text-neutral-600">
+        <p className="text-lg text-fg-muted">
           Whether it's a one-time donation or monthly support, every contribution
           makes a difference.
         </p>
@@ -78,26 +78,26 @@ export default function SupportPage(): JSX.Element {
 
       {/* Payment Options Grid */}
       <div className="mb-8">
-        <h2 className="text-2xl font-medium text-neutral-900 mb-6">
+        <h2 className="text-2xl font-medium text-fg-strong mb-6">
           Choose your platform
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {paymentOptions.map((option) => (
-            <div key={option.name} className="scandi-card">
+            <div key={option.name} className="card">
               <div className="flex items-center space-x-3 mb-3">
                 <span className="text-3xl">{option.icon}</span>
-                <h3 className="text-xl font-medium text-neutral-900">
+                <h3 className="text-xl font-medium text-fg-strong">
                   {option.name}
                 </h3>
               </div>
-              <p className="text-neutral-600 mb-4">
+              <p className="text-fg-muted mb-4">
                 {option.description}
               </p>
               <a
                 href={option.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="scandi-btn w-full text-center block"
+                className="btn w-full text-center block"
               >
                 Support via {option.name}
               </a>
@@ -108,20 +108,20 @@ export default function SupportPage(): JSX.Element {
 
       {/* Why Support Section */}
       <div className="flex flex-col items-center mb-4">
-        <h2 className="text-2xl font-medium text-neutral-900 mb-4">
+        <h2 className="text-2xl font-medium text-fg-strong mb-4">
           Your support helps with:
         </h2>
-        <ul className="space-y-2 text-neutral-700">
+        <ul className="space-y-2 text-fg">
           <li className="flex items-start space-x-2">
-            <span className="text-primary">✓</span>
+            <span className="text-accent-fg">✓</span>
             <span>Adding requested features faster</span>
           </li>
           <li className="flex items-start space-x-2">
-            <span className="text-primary">✓</span>
+            <span className="text-accent-fg">✓</span>
             <span>Keeping ads and paywalls away</span>
           </li>
           <li className="flex items-start space-x-2">
-            <span className="text-primary">✓</span>
+            <span className="text-accent-fg">✓</span>
             <span>Supporting open source development</span>
           </li>
         </ul>
@@ -130,10 +130,10 @@ export default function SupportPage(): JSX.Element {
 
       {/* Thank You Section */}
       <div className="text-center pt-8">
-        <p className="text-lg text-neutral-600">
+        <p className="text-lg text-fg-muted">
           Thanks for supporting the future of Stream Chameleon!
         </p>
-        <p className="text-neutral-500 mt-2">
+        <p className="text-fg-muted mt-2">
           Together, we're building the best stream management tool for Twitch creators.
         </p>
       </div>

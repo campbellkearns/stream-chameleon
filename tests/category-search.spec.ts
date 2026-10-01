@@ -142,7 +142,7 @@ test.describe('Category Search', () => {
     await page.fill('input[name="title"]', 'Test');
 
     // Submit without category
-    await page.click('button:has-text("Create Profile")');
+    await page.click('button:has-text("Create Preset")');
 
     // Wait a moment for validation
     await page.waitForTimeout(300);

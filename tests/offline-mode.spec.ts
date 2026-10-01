@@ -15,8 +15,8 @@ async function selectCategory(page: Page, query: string) {
 
 test.describe('Offline Functionality', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForSelector('h1:has-text("Stream Profiles")', { timeout: 10000 });
+    await page.goto('/presets');
+    await page.waitForSelector('h1:has-text("Presets")', { timeout: 10000 });
   });
 
   test('should store profiles in IndexedDB', async ({ page }) => {
@@ -26,7 +26,7 @@ test.describe('Offline Functionality', () => {
     await page.fill('input[name="title"]', 'Testing offline storage');
     await selectCategory(page, 'Just Chatting');
     await page.click('button[type="submit"]');
-    await page.waitForURL('/');
+    await page.waitForURL('/presets');
 
     // Check IndexedDB for the profile
     const hasProfile = await page.evaluate(async () => {
@@ -67,10 +67,10 @@ test.describe('Offline Functionality', () => {
     await page.click('button[type="submit"]');
 
     // Should redirect even when offline
-    await expect(page).toHaveURL('/', { timeout: 5000 });
+    await expect(page).toHaveURL('/presets', { timeout: 5000 });
 
     // Profile should appear in the list (from IndexedDB)
-    await expect(page.locator('text=Offline Created Profile')).toBeVisible();
+    await expect(page.locator('[data-testid="preset-card"]', { hasText: 'Offline Created Profile' })).toBeVisible();
 
     // Go back online
     await context.setOffline(false);
@@ -83,13 +83,13 @@ test.describe('Offline Functionality', () => {
     await page.fill('input[name="title"]', 'Original offline title');
     await selectCategory(page, 'Just Chatting');
     await page.click('button[type="submit"]');
-    await page.waitForURL('/');
+    await page.waitForURL('/presets');
 
     // Now go offline
     await context.setOffline(true);
 
     // Edit the profile
-    const profileCard = page.locator('article.scandi-card', { hasText: 'Profile for Offline Edit' });
+    const profileCard = page.locator('[data-testid="preset-card"]', { hasText: 'Profile for Offline Edit' });
     await profileCard.hover();
     await profileCard.locator('a[title*="Edit" i]').click();
 
@@ -98,7 +98,7 @@ test.describe('Offline Functionality', () => {
     await page.click('button[type="submit"]');
 
     // Should work
-    await expect(page).toHaveURL('/');
+    await expect(page).toHaveURL('/presets');
     await expect(page.locator('text=Updated while offline')).toBeVisible();
 
     // Go back online
@@ -107,7 +107,7 @@ test.describe('Offline Functionality', () => {
 
   test('should list profiles while offline', async ({ page, context }) => {
     // Ensure we have at least one profile
-    const hasProfiles = await page.locator('article.scandi-card').count() > 0;
+    const hasProfiles = await page.locator('[data-testid="preset-card"]').count() > 0;
 
     if (!hasProfiles) {
       await page.locator('a[href="/profile/new"]').filter({ visible: true }).first().click();
@@ -115,20 +115,20 @@ test.describe('Offline Functionality', () => {
       await page.fill('input[name="title"]', 'For offline listing');
       await selectCategory(page, 'Just Chatting');
       await page.click('button[type="submit"]');
-      await page.waitForURL('/');
+      await page.waitForURL('/presets');
     }
 
-    const initialCount = await page.locator('article.scandi-card').count();
+    const initialCount = await page.locator('[data-testid="preset-card"]').count();
 
     // Go offline
     await context.setOffline(true);
 
     // Reload the page
     await page.reload();
-    await page.waitForSelector('h1:has-text("Stream Profiles")');
+    await page.waitForSelector('h1:has-text("Presets")');
 
     // Should still show profiles from IndexedDB
-    const offlineCount = await page.locator('article.scandi-card').count();
+    const offlineCount = await page.locator('[data-testid="preset-card"]').count();
     expect(offlineCount).toBe(initialCount);
 
     // Go back online
@@ -141,7 +141,7 @@ test.describe('Offline Functionality', () => {
 
     // Reload to simulate app starting offline
     await page.reload();
-    await page.waitForSelector('h1:has-text("Stream Profiles")');
+    await page.waitForSelector('h1:has-text("Presets")');
 
     // Should show offline warning or status
     const hasOfflineIndicator = await page.locator(
@@ -149,7 +149,7 @@ test.describe('Offline Functionality', () => {
     ).count() > 0;
 
     // App should still be functional for local operations
-    const canNavigate = await page.locator('a:has-text("New Profile")').isVisible();
+    const canNavigate = await page.locator('a:has-text("New Preset")').isVisible();
     expect(canNavigate).toBeTruthy();
 
     // Go back online
@@ -158,7 +158,7 @@ test.describe('Offline Functionality', () => {
 
   test('should disable API-dependent actions when offline', async ({ page, context }) => {
     // Ensure we have a profile
-    const hasProfiles = await page.locator('article.scandi-card').count() > 0;
+    const hasProfiles = await page.locator('[data-testid="preset-card"]').count() > 0;
 
     if (!hasProfiles) {
       await page.locator('a[href="/profile/new"]').filter({ visible: true }).first().click();
@@ -166,13 +166,13 @@ test.describe('Offline Functionality', () => {
       await page.fill('input[name="title"]', 'For API testing');
       await selectCategory(page, 'Just Chatting');
       await page.click('button[type="submit"]');
-      await page.waitForURL('/');
+      await page.waitForURL('/presets');
     }
 
     // Go offline
     await context.setOffline(true);
     await page.reload();
-    await page.waitForSelector('h1:has-text("Stream Profiles")');
+    await page.waitForSelector('h1:has-text("Presets")');
 
     // "Apply Profile" button should be disabled or show warning
     const applyButton = page.locator('button:has-text("Apply Profile")').first();

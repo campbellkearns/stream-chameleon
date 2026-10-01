@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useProfile } from '@/hooks/useProfiles'
-import { useProfiles } from '@/hooks/useProfiles'
+import { useStreamControl } from '@/hooks/useStreamControl'
+import { useToast } from '@/components/Toast'
 import { CategorySearchDropdown } from '@/components/CategorySearchDropdown'
 import type { UpdateProfileInput, StreamCategory } from '@/types/Profile'
 
@@ -9,7 +10,8 @@ export default function EditProfile(): JSX.Element {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const { profile, isLoading: isLoadingProfile, error: profileError } = useProfile(id || null)
-  const { updateProfile, deleteProfile, isLoading: isUpdating } = useProfiles()
+  const { updateProfile, deleteProfile, isLoading: isUpdating } = useStreamControl()
+  const { showToast } = useToast()
   
   const [formData, setFormData] = useState({
     name: '',
@@ -42,9 +44,9 @@ export default function EditProfile(): JSX.Element {
     
     // Name validation
     if (!formData.name.trim()) {
-      errors.name = 'Profile name is required'
+      errors.name = 'Preset name is required'
     } else if (formData.name.length > 50) {
-      errors.name = 'Profile name must be 50 characters or less'
+      errors.name = 'Preset name must be 50 characters or less'
     }
     
     // Category validation
@@ -80,7 +82,7 @@ export default function EditProfile(): JSX.Element {
     e.preventDefault()
     
     if (!id || !profile) {
-      navigate('/')
+      navigate('/presets')
       return
     }
     
@@ -106,16 +108,13 @@ export default function EditProfile(): JSX.Element {
       const updatedProfile = await updateProfile(id, updateInput)
       
       if (updatedProfile) {
-        // Success! Navigate back to dashboard
-        navigate('/', { 
-          state: { 
-            message: `Profile "${updatedProfile.name}" updated successfully!` 
-          }
-        })
+        // Success! Navigate back to presets
+        showToast(`Updated "${updatedProfile.name}"`, undefined, 'success')
+        navigate('/presets')
       } else {
         // Error is handled by the hook
         setFormErrors({ 
-          general: 'Failed to update profile. Please check your input and try again.' 
+          general: 'Failed to update preset. Please check your input and try again.' 
         })
       }
     } catch (error) {
@@ -146,7 +145,7 @@ export default function EditProfile(): JSX.Element {
   const handleDelete = async () => {
     if (!id || !profile) return
     
-    const confirmMessage = `Are you sure you want to delete "${profile.name}"?\n\nThis action cannot be undone.`
+    const confirmMessage = `Are you sure you want to delete "${profile.name}"? This can't be undone.`
     
     if (window.confirm(confirmMessage)) {
       setIsDeleting(true)
@@ -155,16 +154,13 @@ export default function EditProfile(): JSX.Element {
         const success = await deleteProfile(id)
         
         if (success) {
-          navigate('/', { 
-            state: { 
-              message: `Profile "${profile.name}" deleted successfully.` 
-            }
-          })
+          showToast(`Deleted "${profile.name}"`, undefined, 'success')
+          navigate('/presets')
         } else {
-          alert('Failed to delete profile. Please try again.')
+          showToast('Couldn\'t delete preset', 'Please try again.', 'error')
         }
       } catch (error) {
-        alert('An unexpected error occurred while deleting the profile.')
+        showToast('Couldn\'t delete preset', 'An unexpected error occurred.', 'error')
       } finally {
         setIsDeleting(false)
       }
@@ -179,7 +175,7 @@ export default function EditProfile(): JSX.Element {
       <div className="flex items-center justify-center py-16">
         <div className="text-center">
           <div className="text-4xl mb-4 animate-pulse">⏳</div>
-          <p className="text-lg text-neutral-600">Loading profile...</p>
+          <p className="text-lg text-fg-muted">Loading preset…</p>
         </div>
       </div>
     )
@@ -190,17 +186,17 @@ export default function EditProfile(): JSX.Element {
     return (
       <div className="text-center py-16">
         <div className="text-6xl mb-4">⚠️</div>
-        <h3 className="text-xl font-medium text-neutral-900 mb-2">
-          Profile not found
+        <h3 className="text-xl font-medium text-fg-strong mb-2">
+          Preset not found
         </h3>
-        <p className="text-neutral-600 mb-6">
-          {profileError || 'The profile you\'re looking for doesn\'t exist.'}
+        <p className="text-fg-muted mb-6">
+          {profileError || 'The preset you\'re looking for doesn\'t exist.'}
         </p>
         <button 
-          onClick={() => navigate('/')}
-          className="scandi-btn"
+          onClick={() => navigate('/presets')}
+          className="btn"
         >
-          Back to Dashboard
+          Back to Presets
         </button>
       </div>
     )
@@ -209,11 +205,11 @@ export default function EditProfile(): JSX.Element {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-4xl font-medium text-neutral-900 mb-3">
-          Edit Profile
+        <h1 className="text-4xl font-medium text-fg-strong mb-3">
+          Edit Preset
         </h1>
-        <p className="text-lg text-neutral-600">
-          Update your stream profile settings
+        <p className="text-lg text-fg-muted">
+          Change what this preset applies to your stream.
         </p>
       </div>
 
@@ -221,20 +217,20 @@ export default function EditProfile(): JSX.Element {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* General error message */}
           {formErrors.general && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-700 text-sm">{formErrors.general}</p>
+            <div className="p-4 bg-surface border border-red-800 rounded-lg">
+              <p className="text-red-400 text-sm">{formErrors.general}</p>
             </div>
           )}
           
-          <div className="scandi-card">
-            <h2 className="text-xl font-medium text-neutral-900 mb-6">
-              Profile Details
+          <div className="card">
+            <h2 className="text-xl font-medium text-fg-strong mb-6">
+              Preset Details
             </h2>
             
             <div className="space-y-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-neutral-700 mb-2">
-                  Profile Name *
+                <label htmlFor="name" className="block text-sm font-medium text-fg mb-2">
+                  Preset Name *
                 </label>
                 <input
                   type="text"
@@ -242,18 +238,18 @@ export default function EditProfile(): JSX.Element {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className={`scandi-input w-full ${formErrors.name ? 'border-red-300 bg-red-50' : ''}`}
+                  className={`input w-full ${formErrors.name ? 'border-red-800 bg-surface' : ''}`}
                   placeholder="e.g., Morning Pages"
                   disabled={isFormDisabled}
                   required
                 />
                 {formErrors.name && (
-                  <p className="text-red-600 text-xs mt-1">{formErrors.name}</p>
+                  <p className="text-red-400 text-xs mt-1">{formErrors.name}</p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="description" className="block text-sm font-medium text-neutral-700 mb-2">
+                <label htmlFor="description" className="block text-sm font-medium text-fg mb-2">
                   Description
                 </label>
                 <textarea
@@ -262,14 +258,14 @@ export default function EditProfile(): JSX.Element {
                   value={formData.description}
                   onChange={handleChange}
                   rows={3}
-                  className="scandi-input w-full resize-none"
+                  className="input w-full resize-none"
                   placeholder="Brief description of this stream type"
                   disabled={isFormDisabled}
                 />
               </div>
 
               <div>
-                <label htmlFor="category" className="block text-sm font-medium text-neutral-700 mb-2">
+                <label htmlFor="category" className="block text-sm font-medium text-fg mb-2">
                   Twitch Category *
                 </label>
                 <CategorySearchDropdown
@@ -291,7 +287,7 @@ export default function EditProfile(): JSX.Element {
               </div>
 
               <div>
-                <label htmlFor="title" className="block text-sm font-medium text-neutral-700 mb-2">
+                <label htmlFor="title" className="block text-sm font-medium text-fg mb-2">
                   Stream Title Template *
                 </label>
                 <input
@@ -300,21 +296,21 @@ export default function EditProfile(): JSX.Element {
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
-                  className={`scandi-input w-full ${formErrors.title ? 'border-red-300 bg-red-50' : ''}`}
+                  className={`input w-full ${formErrors.title ? 'border-red-800 bg-surface' : ''}`}
                   placeholder="e.g., Morning Pages - {DAY} Reflection"
                   disabled={isFormDisabled}
                   required
                 />
                 {formErrors.title && (
-                  <p className="text-red-600 text-xs mt-1">{formErrors.title}</p>
+                  <p className="text-red-400 text-xs mt-1">{formErrors.title}</p>
                 )}
-                <p className="text-xs text-neutral-500 mt-1">
+                <p className="text-xs text-fg-muted mt-1">
                   Use {`{DAY}`} for day of week, {`{YYYY-MM-DD}`} for date
                 </p>
               </div>
 
               <div>
-                <label htmlFor="tags" className="block text-sm font-medium text-neutral-700 mb-2">
+                <label htmlFor="tags" className="block text-sm font-medium text-fg mb-2">
                   Tags
                 </label>
                 <input
@@ -323,14 +319,14 @@ export default function EditProfile(): JSX.Element {
                   name="tags"
                   value={formData.tags}
                   onChange={handleChange}
-                  className={`scandi-input w-full ${formErrors.tags ? 'border-red-300 bg-red-50' : ''}`}
+                  className={`input w-full ${formErrors.tags ? 'border-red-800 bg-surface' : ''}`}
                   placeholder="journal, morning, reflection (comma separated)"
                   disabled={isFormDisabled}
                 />
                 {formErrors.tags && (
-                  <p className="text-red-600 text-xs mt-1">{formErrors.tags}</p>
+                  <p className="text-red-400 text-xs mt-1">{formErrors.tags}</p>
                 )}
-                <p className="text-xs text-neutral-500 mt-1">
+                <p className="text-xs text-fg-muted mt-1">
                   Separate tags with commas, max 10 tags
                 </p>
               </div>
@@ -342,7 +338,7 @@ export default function EditProfile(): JSX.Element {
               type="button"
               onClick={handleDelete}
               disabled={isFormDisabled}
-              className="px-6 py-3 text-red-600 hover:text-red-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-3 text-red-400 hover:text-red-300 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isDeleting ? (
                 <>
@@ -352,7 +348,7 @@ export default function EditProfile(): JSX.Element {
               ) : (
                 <>
                   <span>🗑️</span>
-                  <span>Delete Profile</span>
+                  <span>Delete Preset</span>
                 </>
               )}
             </button>
@@ -360,8 +356,8 @@ export default function EditProfile(): JSX.Element {
             <div className="flex items-center space-x-4">
               <button
                 type="button"
-                onClick={() => navigate('/')}
-                className="px-6 py-3 text-neutral-600 hover:text-neutral-900 transition-colors"
+                onClick={() => navigate('/presets')}
+                className="px-6 py-3 text-fg-muted hover:text-fg-strong transition-colors"
                 disabled={isFormDisabled}
               >
                 Cancel
@@ -370,7 +366,7 @@ export default function EditProfile(): JSX.Element {
               <button
                 type="submit"
                 disabled={isFormDisabled}
-                className="scandi-btn flex items-center space-x-2"
+                className="btn flex items-center space-x-2"
               >
                 {isSubmitting ? (
                   <>

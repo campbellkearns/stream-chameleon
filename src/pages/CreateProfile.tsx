@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useProfiles } from '@/hooks/useProfiles'
+import { useStreamControl } from '@/hooks/useStreamControl'
+import { useToast } from '@/components/Toast'
 import { CategorySearchDropdown } from '@/components/CategorySearchDropdown'
 import type { CreateProfileInput, StreamCategory } from '@/types/Profile'
 
 export default function CreateProfile(): JSX.Element {
   const navigate = useNavigate()
-  const { createProfile, isLoading } = useProfiles()
+  const { createProfile, isLoading } = useStreamControl()
+  const { showToast } = useToast()
   
   const [formData, setFormData] = useState({
     name: '',
@@ -25,9 +27,9 @@ export default function CreateProfile(): JSX.Element {
     
     // Name validation
     if (!formData.name.trim()) {
-      errors.name = 'Profile name is required'
+      errors.name = 'Preset name is required'
     } else if (formData.name.length > 50) {
-      errors.name = 'Profile name must be 50 characters or less'
+      errors.name = 'Preset name must be 50 characters or less'
     }
     
     // Category validation
@@ -83,16 +85,13 @@ export default function CreateProfile(): JSX.Element {
       const newProfile = await createProfile(profileInput)
       
       if (newProfile) {
-        // Success! Navigate back to dashboard
-        navigate('/', { 
-          state: { 
-            message: `Profile "${newProfile.name}" created successfully!` 
-          }
-        })
+        // Success! Navigate back to presets
+        showToast(`Created "${newProfile.name}"`, undefined, 'success')
+        navigate('/presets')
       } else {
         // Error is handled by the hook, but we can show a generic message
         setFormErrors({ 
-          general: 'Failed to create profile. Please check your input and try again.' 
+          general: 'Failed to create preset. Please check your input and try again.' 
         })
       }
     } catch (error) {
@@ -125,11 +124,11 @@ export default function CreateProfile(): JSX.Element {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-4xl font-medium text-neutral-900 mb-3">
-          Create New Profile
+        <h1 className="text-4xl font-medium text-fg-strong mb-3">
+          New Preset
         </h1>
-        <p className="text-lg text-neutral-600">
-          Set up a new stream profile for quick updates
+        <p className="text-lg text-fg-muted">
+          Save a title, category, and tags you can apply in one click.
         </p>
       </div>
 
@@ -137,20 +136,20 @@ export default function CreateProfile(): JSX.Element {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* General error message */}
           {formErrors.general && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-700 text-sm">{formErrors.general}</p>
+            <div className="p-4 bg-surface border border-red-800 rounded-lg">
+              <p className="text-red-400 text-sm">{formErrors.general}</p>
             </div>
           )}
           
-          <div className="scandi-card">
-            <h2 className="text-xl font-medium text-neutral-900 mb-6">
-              Profile Details
+          <div className="card">
+            <h2 className="text-xl font-medium text-fg-strong mb-6">
+              Preset Details
             </h2>
             
             <div className="space-y-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-neutral-700 mb-2">
-                  Profile Name *
+                <label htmlFor="name" className="block text-sm font-medium text-fg mb-2">
+                  Preset Name *
                 </label>
                 <input
                   type="text"
@@ -158,18 +157,18 @@ export default function CreateProfile(): JSX.Element {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className={`scandi-input w-full ${formErrors.name ? 'border-red-300 bg-red-50' : ''}`}
+                  className={`input w-full ${formErrors.name ? 'border-red-800 bg-surface' : ''}`}
                   placeholder="e.g., Morning Pages"
                   disabled={isFormDisabled}
                   required
                 />
                 {formErrors.name && (
-                  <p className="text-red-600 text-xs mt-1">{formErrors.name}</p>
+                  <p className="text-red-400 text-xs mt-1">{formErrors.name}</p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="description" className="block text-sm font-medium text-neutral-700 mb-2">
+                <label htmlFor="description" className="block text-sm font-medium text-fg mb-2">
                   Description
                 </label>
                 <textarea
@@ -178,14 +177,14 @@ export default function CreateProfile(): JSX.Element {
                   value={formData.description}
                   onChange={handleChange}
                   rows={3}
-                  className="scandi-input w-full resize-none"
+                  className="input w-full resize-none"
                   placeholder="Brief description of this stream type"
                   disabled={isFormDisabled}
                 />
               </div>
 
               <div>
-                <label htmlFor="category" className="block text-sm font-medium text-neutral-700 mb-2">
+                <label htmlFor="category" className="block text-sm font-medium text-fg mb-2">
                   Twitch Category *
                 </label>
                 <CategorySearchDropdown
@@ -207,7 +206,7 @@ export default function CreateProfile(): JSX.Element {
               </div>
 
               <div>
-                <label htmlFor="title" className="block text-sm font-medium text-neutral-700 mb-2">
+                <label htmlFor="title" className="block text-sm font-medium text-fg mb-2">
                   Stream Title Template *
                 </label>
                 <input
@@ -216,21 +215,21 @@ export default function CreateProfile(): JSX.Element {
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
-                  className={`scandi-input w-full ${formErrors.title ? 'border-red-300 bg-red-50' : ''}`}
+                  className={`input w-full ${formErrors.title ? 'border-red-800 bg-surface' : ''}`}
                   placeholder="e.g., Morning Pages - {DAY} Reflection"
                   disabled={isFormDisabled}
                   required
                 />
                 {formErrors.title && (
-                  <p className="text-red-600 text-xs mt-1">{formErrors.title}</p>
+                  <p className="text-red-400 text-xs mt-1">{formErrors.title}</p>
                 )}
-                <p className="text-xs text-neutral-500 mt-1">
+                <p className="text-xs text-fg-muted mt-1">
                   Use {`{DAY}`} for day of week, {`{YYYY-MM-DD}`} for date
                 </p>
               </div>
 
               <div>
-                <label htmlFor="tags" className="block text-sm font-medium text-neutral-700 mb-2">
+                <label htmlFor="tags" className="block text-sm font-medium text-fg mb-2">
                   Tags
                 </label>
                 <input
@@ -239,14 +238,14 @@ export default function CreateProfile(): JSX.Element {
                   name="tags"
                   value={formData.tags}
                   onChange={handleChange}
-                  className={`scandi-input w-full ${formErrors.tags ? 'border-red-300 bg-red-50' : ''}`}
+                  className={`input w-full ${formErrors.tags ? 'border-red-800 bg-surface' : ''}`}
                   placeholder="journal, morning, reflection (comma separated)"
                   disabled={isFormDisabled}
                 />
                 {formErrors.tags && (
-                  <p className="text-red-600 text-xs mt-1">{formErrors.tags}</p>
+                  <p className="text-red-400 text-xs mt-1">{formErrors.tags}</p>
                 )}
-                <p className="text-xs text-neutral-500 mt-1">
+                <p className="text-xs text-fg-muted mt-1">
                   Separate tags with commas, max 10 tags
                 </p>
               </div>
@@ -256,8 +255,8 @@ export default function CreateProfile(): JSX.Element {
           <div className="flex items-center justify-between">
             <button
               type="button"
-              onClick={() => navigate('/')}
-              className="px-6 py-3 text-neutral-600 hover:text-neutral-900 transition-colors"
+              onClick={() => navigate('/presets')}
+              className="px-6 py-3 text-fg-muted hover:text-fg-strong transition-colors"
               disabled={isFormDisabled}
             >
               Cancel
@@ -266,7 +265,7 @@ export default function CreateProfile(): JSX.Element {
             <button
               type="submit"
               disabled={isFormDisabled}
-              className="scandi-btn flex items-center space-x-2"
+              className="btn flex items-center space-x-2"
             >
               {isSubmitting ? (
                 <>
@@ -276,7 +275,7 @@ export default function CreateProfile(): JSX.Element {
               ) : (
                 <>
                   <span>💾</span>
-                  <span>Create Profile</span>
+                  <span>Create Preset</span>
                 </>
               )}
             </button>

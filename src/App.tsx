@@ -1,14 +1,13 @@
 import { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
-import Dashboard from './pages/Dashboard';
+import Presets from './pages/Presets';
 import CreateProfile from './pages/CreateProfile';
 import EditProfile from './pages/EditProfile';
 import AuthPage from './pages/AuthPage';
 import AuthCallback from './pages/AuthCallback';
 import SupportPage from './pages/SupportPage';
 import { initializeRepositories } from './repositories';
-import './App.css';
 
 // Import test functions in development
 if (import.meta.env.DEV) {
@@ -33,7 +32,9 @@ function App(): JSX.Element {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
-        <Route index element={<Dashboard />} />
+        {/* Live controller replaces this redirect */}
+        <Route index element={<Navigate to="/presets" replace />} />
+        <Route path="presets" element={<Presets />} />
         <Route path="profile/new" element={<CreateProfile />} />
         <Route path="profile/:id/edit" element={<EditProfile />} />
         <Route path="support" element={<SupportPage />} />

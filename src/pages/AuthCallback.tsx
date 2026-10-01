@@ -66,32 +66,32 @@ export default function AuthCallback(): JSX.Element {
   // Show error state
   if (callbackError || (!isProcessing && error)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+      <div className="min-h-screen flex items-center justify-center bg-bg">
         <div className="max-w-md w-full mx-4">
-          <div className="scandi-card text-center">
+          <div className="card text-center">
             <div className="text-6xl mb-6">❌</div>
             
-            <h1 className="text-2xl font-medium text-neutral-900 mb-4">
+            <h1 className="text-2xl font-medium text-fg-strong mb-4">
               Authentication Failed
             </h1>
             
-            <p className="text-neutral-600 mb-8">
+            <p className="text-fg-muted mb-8">
               {callbackError || error}
             </p>
             
             <div className="space-y-3">
               <button 
                 onClick={() => navigate('/auth', { replace: true })}
-                className="scandi-btn w-full"
+                className="btn w-full"
               >
                 Try Again
               </button>
               
               <button 
                 onClick={() => navigate('/', { replace: true })}
-                className="scandi-btn bg-neutral-100 text-neutral-900 hover:bg-neutral-200 w-full"
+                className="btn bg-raised text-fg-strong hover:bg-raised-hover w-full"
               >
-                Go to Dashboard
+                Go to Presets
               </button>
             </div>
           </div>
@@ -102,25 +102,25 @@ export default function AuthCallback(): JSX.Element {
 
   // Show loading state while processing
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+    <div className="min-h-screen flex items-center justify-center bg-bg">
       <div className="max-w-md w-full mx-4">
-        <div className="scandi-card text-center">
+        <div className="card text-center">
           <div className="text-6xl mb-6">🔄</div>
           
-          <h1 className="text-2xl font-medium text-neutral-900 mb-4">
+          <h1 className="text-2xl font-medium text-fg-strong mb-4">
             Completing Authentication
           </h1>
           
-          <p className="text-neutral-600 mb-8">
+          <p className="text-fg-muted mb-8">
             Please wait while we complete your Twitch connection...
           </p>
           
           <div className="flex items-center justify-center space-x-2">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <span className="text-neutral-600">Processing...</span>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
+            <span className="text-fg-muted">Processing...</span>
           </div>
           
-          <p className="text-xs text-neutral-500 mt-6">
+          <p className="text-xs text-fg-muted mt-6">
             This should only take a few seconds
           </p>
         </div>
