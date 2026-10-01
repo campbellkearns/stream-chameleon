@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test';
  *
  * When the first profile load fails transiently, the dashboard shows an error
  * banner with a "Try Again" button. The button must re-run the load — not just
- * clear the error flag, which left a permanent "No profiles yet" empty state
+ * clear the error flag, which left a permanent "No presets yet" empty state
  * that misrepresented the user's data as absent.
  *
  * The init script monkey-patches indexedDB.open so the FIRST call fails (an
@@ -53,7 +53,7 @@ test.describe('Dashboard Try Again recovery', () => {
 
     // 1. The first open fails: the dashboard must surface the failure with a
     //    "Try Again" affordance instead of a silent empty state.
-    await page.goto('/');
+    await page.goto('/presets');
     await expect(page.getByText('Something went wrong')).toBeVisible({ timeout: 15000 });
     const tryAgain = page.getByRole('button', { name: 'Try Again' });
     await expect(tryAgain).toBeVisible();
@@ -85,12 +85,12 @@ test.describe('Dashboard Try Again recovery', () => {
 
     // 3. "Try Again" must re-invoke the load. Regression (C-2): the old
     //    handler only cleared the error flag, so the dashboard fell through
-    //    to the "No profiles yet" empty state even though data existed.
+    //    to the "No presets yet" empty state even though data existed.
     await tryAgain.click();
 
     await expect(page.getByText('Something went wrong')).toBeHidden({ timeout: 15000 });
-    await expect(page.getByRole('heading', { name: 'No profiles yet' })).toBeHidden({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'No presets yet' })).toBeHidden({ timeout: 15000 });
     await expect(page.getByRole('heading', { name: 'Weekly Dev Stream' })).toBeVisible();
-    await expect(page.getByText('1 profile ready to use')).toBeVisible();
+    await expect(page.getByText('1 preset ready to apply')).toBeVisible();
   });
 });

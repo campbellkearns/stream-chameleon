@@ -52,7 +52,7 @@ test.describe('IndexedDB initialization recovery', () => {
 
     // 1. The first open fails: the dashboard must surface the failure instead
     //    of hanging on the loading state.
-    await page.goto('/');
+    await page.goto('/presets');
     await expect(page.getByText('Something went wrong')).toBeVisible({ timeout: 15000 });
     await expect(page.getByRole('button', { name: 'Try Again' })).toBeVisible();
 

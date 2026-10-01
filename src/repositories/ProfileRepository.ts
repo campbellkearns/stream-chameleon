@@ -224,7 +224,9 @@ export class ProfileRepository {
         description: updates.description ?? existingResult.data.description,
         category: updates.category ?? existingResult.data.category,
         title: updates.title ?? existingResult.data.title,
-        tags: updates.tags ?? existingResult.data.tags
+        tags: updates.tags ?? existingResult.data.tags,
+        icon: updates.icon ?? existingResult.data.icon,
+        accent: updates.accent ?? existingResult.data.accent
       };
 
       // Validate the updated data

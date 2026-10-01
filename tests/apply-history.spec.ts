@@ -155,11 +155,11 @@ test.describe('Apply history recording', () => {
       await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
     });
 
-    await page.goto('/');
+    await page.goto('/presets');
     await expect(page.getByRole('heading', { name: SEEDED_PROFILE.name })).toBeVisible({ timeout: 15000 });
 
     page.on('dialog', (dialog) => dialog.accept());
-    await page.locator('article.scandi-card').first().getByRole('button', { name: /apply profile/i }).click();
+    await page.locator('[data-testid="preset-card"]').first().getByRole('button', { name: /apply to stream/i }).click();
 
     // The PATCH must actually have been made, else the assertions below are vacuous
     await expect
@@ -193,7 +193,7 @@ test.describe('Apply history recording', () => {
     // Pruning is a repository contract: exercise the real append path 101
     // times with strictly increasing appliedAt values so the prune order is
     // deterministic (no real-clock ties).
-    await page.goto('/');
+    await page.goto('/presets');
 
     const names = await page.evaluate(async (): Promise<string[]> => {
       const { getApplyHistoryRepository } = await import('/src/repositories/ApplyHistoryRepository.ts');
@@ -256,10 +256,10 @@ test.describe('Apply history recording', () => {
       });
     });
 
-    await page.goto('/');
+    await page.goto('/presets');
     await expect(page.getByRole('heading', { name: SEEDED_PROFILE.name })).toBeVisible({ timeout: 15000 });
 
-    await page.locator('article.scandi-card').first().getByRole('button', { name: /apply profile/i }).click();
+    await page.locator('[data-testid="preset-card"]').first().getByRole('button', { name: /apply to stream/i }).click();
 
     await expect.poll(() => patchCount, { timeout: 15_000 }).toBeGreaterThan(0);
     await expect.poll(async () => (await readHistory(page)).length, { timeout: 15_000 }).toBe(1);

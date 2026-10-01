@@ -51,12 +51,12 @@ export const APIStatus: React.FC<APIStatusProps> = ({
 
   // Full status display
   return (
-    <div className={`scandi-card ${className}`}>
+    <div className={`card ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           <span className="text-2xl">{getStatusIcon()}</span>
           <div>
-            <h3 className="text-lg font-medium text-neutral-900">
+            <h3 className="text-lg font-medium text-fg-strong">
               Twitch API Status
             </h3>
             <p className={`text-sm ${getStatusColor()}`}>
@@ -68,14 +68,14 @@ export const APIStatus: React.FC<APIStatusProps> = ({
         <button 
           onClick={checkHealth}
           disabled={isChecking}
-          className="scandi-btn-secondary text-sm px-4 py-2"
+          className="btn-secondary text-sm px-4 py-2"
         >
           {isChecking ? 'Checking...' : 'Refresh'}
         </button>
       </div>
 
       {showDetails && (
-        <div className="space-y-2 text-sm text-neutral-600">
+        <div className="space-y-2 text-sm text-fg-muted">
           {lastCheck && (
             <div>
               <span className="font-medium">Last checked:</span>{' '}
@@ -91,7 +91,7 @@ export const APIStatus: React.FC<APIStatusProps> = ({
           )}
           
           {error && (
-            <div className="text-red-600 bg-red-50 p-3 rounded-lg">
+            <div className="text-red-400 bg-surface p-3 rounded-lg">
               <p className="font-medium mb-1">Connection Error</p>
               <p className="text-sm">
                 {getErrorMessageWithSuggestion(error)}
@@ -100,7 +100,7 @@ export const APIStatus: React.FC<APIStatusProps> = ({
                 href={getTwitchStatusURL()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 underline text-sm mt-2 inline-block"
+                className="text-sky-400 hover:text-sky-300 underline text-sm mt-2 inline-block"
               >
                 Check Twitch Status →
               </a>

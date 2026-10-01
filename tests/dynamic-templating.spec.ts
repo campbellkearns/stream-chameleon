@@ -15,8 +15,8 @@ async function selectCategory(page: Page, query: string) {
 
 test.describe('Dynamic Title Templating', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForSelector('h1:has-text("Stream Profiles")', { timeout: 10000 });
+    await page.goto('/presets');
+    await page.waitForSelector('h1:has-text("Presets")', { timeout: 10000 });
   });
 
   test('should replace {DAY} with current day of week', async ({ page }) => {
@@ -29,16 +29,18 @@ test.describe('Dynamic Title Templating', () => {
     await page.fill('input[name="title"]', 'Streaming on {DAY}');
     await selectCategory(page, 'Just Chatting');
     await page.click('button[type="submit"]');
-    await page.waitForURL('/');
+    await page.waitForURL('/presets');
 
     // Check that the profile card shows the processed title
-    const profileCard = page.locator('article.scandi-card', { hasText: 'Day Template Test' });
+    const profileCard = page.locator('[data-testid="preset-card"]', { hasText: 'Day Template Test' });
     await expect(profileCard.locator(`text=Streaming on ${currentDay}`)).toBeVisible();
   });
 
   test('should replace {YYYY-MM-DD} with current date', async ({ page }) => {
     // Get current date in YYYY-MM-DD format
-    const currentDate = new Date().toISOString().split('T')[0];
+    // Local calendar day, matching processTitle (a UTC date drifts a day in the evening west of UTC)
+    const now = new Date();
+    const currentDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
     // Create profile with {YYYY-MM-DD} template
     await page.locator('a[href="/profile/new"]').filter({ visible: true }).first().click();
@@ -46,16 +48,18 @@ test.describe('Dynamic Title Templating', () => {
     await page.fill('input[name="title"]', 'Stream {YYYY-MM-DD}');
     await selectCategory(page, 'Just Chatting');
     await page.click('button[type="submit"]');
-    await page.waitForURL('/');
+    await page.waitForURL('/presets');
 
     // Check that the profile card shows the processed title
-    const profileCard = page.locator('article.scandi-card', { hasText: 'Date Template Test' });
+    const profileCard = page.locator('[data-testid="preset-card"]', { hasText: 'Date Template Test' });
     await expect(profileCard.locator(`text=Stream ${currentDate}`)).toBeVisible();
   });
 
   test('should handle multiple template variables in one title', async ({ page }) => {
     const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-    const currentDate = new Date().toISOString().split('T')[0];
+    // Local calendar day, matching processTitle (a UTC date drifts a day in the evening west of UTC)
+    const now = new Date();
+    const currentDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
     // Create profile with both templates
     await page.locator('a[href="/profile/new"]').filter({ visible: true }).first().click();
@@ -63,10 +67,10 @@ test.describe('Dynamic Title Templating', () => {
     await page.fill('input[name="title"]', '{DAY} Stream - {YYYY-MM-DD}');
     await selectCategory(page, 'Just Chatting');
     await page.click('button[type="submit"]');
-    await page.waitForURL('/');
+    await page.waitForURL('/presets');
 
     // Check that both are replaced
-    const profileCard = page.locator('article.scandi-card', { hasText: 'Multiple Templates Test' });
+    const profileCard = page.locator('[data-testid="preset-card"]', { hasText: 'Multiple Templates Test' });
     await expect(profileCard.locator(`text=${currentDay} Stream - ${currentDate}`)).toBeVisible();
   });
 
@@ -77,10 +81,10 @@ test.describe('Dynamic Title Templating', () => {
     await page.fill('input[name="title"]', 'Stream {INVALID} {day}');
     await selectCategory(page, 'Just Chatting');
     await page.click('button[type="submit"]');
-    await page.waitForURL('/');
+    await page.waitForURL('/presets');
 
     // Invalid templates should remain unchanged
-    const profileCard = page.locator('article.scandi-card', { hasText: 'Invalid Template Test' });
+    const profileCard = page.locator('[data-testid="preset-card"]', { hasText: 'Invalid Template Test' });
     await expect(profileCard.locator('text=Stream {INVALID} {day}')).toBeVisible();
   });
 
@@ -91,10 +95,10 @@ test.describe('Dynamic Title Templating', () => {
     await page.fill('input[name="title"]', 'Daily {DAY} Stream');
     await selectCategory(page, 'Just Chatting');
     await page.click('button[type="submit"]');
-    await page.waitForURL('/');
+    await page.waitForURL('/presets');
 
     // Check if title element has a tooltip showing original template
-    const profileCard = page.locator('article.scandi-card', { hasText: 'Tooltip Test' });
+    const profileCard = page.locator('[data-testid="preset-card"]', { hasText: 'Tooltip Test' });
     const titleElement = profileCard.locator('[title*="Daily {DAY} Stream"]');
 
     // The title attribute should contain the original template
@@ -111,16 +115,16 @@ test.describe('Dynamic Title Templating', () => {
     await page.fill('input[name="title"]', 'Regular Title');
     await selectCategory(page, 'Just Chatting');
     await page.click('button[type="submit"]');
-    await page.waitForURL('/');
+    await page.waitForURL('/presets');
 
     // Edit to add template
-    const profileCard = page.locator('article.scandi-card', { hasText: 'Edit Template Test' });
+    const profileCard = page.locator('[data-testid="preset-card"]', { hasText: 'Edit Template Test' });
     await profileCard.hover();
     await profileCard.locator('a[title*="Edit" i]').click();
 
     await page.fill('input[name="title"]', '{DAY} Updated Title');
     await page.click('button[type="submit"]');
-    await page.waitForURL('/');
+    await page.waitForURL('/presets');
 
     // Should show processed template
     await expect(page.locator(`text=${currentDay} Updated Title`)).toBeVisible();

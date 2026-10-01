@@ -268,8 +268,8 @@ export function withAuth<T extends object>(
       return (
         <div className="flex items-center justify-center min-h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-neutral-600">Checking authentication...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
+            <p className="text-fg-muted">Checking authentication...</p>
           </div>
         </div>
       );
@@ -279,15 +279,15 @@ export function withAuth<T extends object>(
     if (!isAuthenticated) {
       return (
         <div className="text-center py-20">
-          <h2 className="text-2xl font-medium text-neutral-900 mb-4">
+          <h2 className="text-2xl font-medium text-fg-strong mb-4">
             Authentication Required
           </h2>
-          <p className="text-neutral-600 mb-8">
+          <p className="text-fg-muted mb-8">
             Please connect your Twitch account to access this feature.
           </p>
           <button 
             onClick={() => window.location.href = '/auth'}
-            className="scandi-btn"
+            className="btn"
           >
             Connect Twitch Account
           </button>

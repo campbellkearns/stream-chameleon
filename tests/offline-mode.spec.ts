@@ -66,8 +66,8 @@ async function seedAuthToken(page: Page): Promise<void> {
 
 test.describe('Offline Functionality', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForSelector('h1:has-text("Stream Profiles")', { timeout: 10000 });
+    await page.goto('/presets');
+    await page.waitForSelector('h1:has-text("Presets")', { timeout: 10000 });
   });
 
   test('should store profiles in IndexedDB', async ({ page }) => {
@@ -77,7 +77,7 @@ test.describe('Offline Functionality', () => {
     await page.fill('input[name="title"]', 'Testing offline storage');
     await selectCategory(page, 'Just Chatting');
     await page.click('button[type="submit"]');
-    await page.waitForURL('/');
+    await page.waitForURL('/presets');
 
     // Check IndexedDB for the profile
     const hasProfile = await page.evaluate(async () => {
@@ -118,10 +118,10 @@ test.describe('Offline Functionality', () => {
     await page.click('button[type="submit"]');
 
     // Should redirect even when offline
-    await expect(page).toHaveURL('/', { timeout: 5000 });
+    await expect(page).toHaveURL('/presets', { timeout: 5000 });
 
     // Profile should appear in the list (from IndexedDB)
-    await expect(page.locator('text=Offline Created Profile')).toBeVisible();
+    await expect(page.locator('[data-testid="preset-card"]', { hasText: 'Offline Created Profile' })).toBeVisible();
   });
 
   test('should edit profiles while offline', async ({ page, context }) => {
@@ -131,13 +131,13 @@ test.describe('Offline Functionality', () => {
     await page.fill('input[name="title"]', 'Original offline title');
     await selectCategory(page, 'Just Chatting');
     await page.click('button[type="submit"]');
-    await page.waitForURL('/');
+    await page.waitForURL('/presets');
 
     // Cut external origins; SPA navigation and IndexedDB writes stay local
     simulateOffline(context);
 
     // Edit the profile
-    const profileCard = page.locator('article.scandi-card', { hasText: 'Profile for Offline Edit' });
+    const profileCard = page.locator('[data-testid="preset-card"]', { hasText: 'Profile for Offline Edit' });
     await profileCard.hover();
     await profileCard.locator('a[title*="Edit" i]').click();
 
@@ -146,13 +146,13 @@ test.describe('Offline Functionality', () => {
     await page.click('button[type="submit"]');
 
     // Should work
-    await expect(page).toHaveURL('/');
+    await expect(page).toHaveURL('/presets');
     await expect(page.locator('text=Updated while offline')).toBeVisible();
   });
 
   test('should list profiles while offline', async ({ page, context }) => {
     // Ensure we have at least one profile
-    const hasProfiles = await page.locator('article.scandi-card').count() > 0;
+    const hasProfiles = await page.locator('[data-testid="preset-card"]').count() > 0;
 
     if (!hasProfiles) {
       await page.locator('a[href="/profile/new"]').filter({ visible: true }).first().click();
@@ -160,21 +160,22 @@ test.describe('Offline Functionality', () => {
       await page.fill('input[name="title"]', 'For offline listing');
       await selectCategory(page, 'Just Chatting');
       await page.click('button[type="submit"]');
-      await page.waitForURL('/');
+      await page.waitForURL('/presets');
     }
 
     // Card render is async after the redirect — wait for it before counting
-    await expect(page.locator('article.scandi-card').first()).toBeVisible();
-    const initialCount = await page.locator('article.scandi-card').count();
+    await expect(page.locator('[data-testid="preset-card"]').first()).toBeVisible();
+    const initialCount = await page.locator('[data-testid="preset-card"]').count();
 
     // Cut external origins; the localhost document still reloads
     simulateOffline(context);
 
     // Reload the page
     await page.reload();
-    await page.waitForSelector('h1:has-text("Stream Profiles")');
+    await page.waitForSelector('h1:has-text("Presets")');
 
-    await expect(page.locator('article.scandi-card')).toHaveCount(initialCount);
+    // Should still show profiles from IndexedDB
+    await expect(page.locator('[data-testid="preset-card"]')).toHaveCount(initialCount);
   });
 
   test('should handle API unavailability gracefully', async ({ page, context }) => {
@@ -187,10 +188,10 @@ test.describe('Offline Functionality', () => {
 
     // Reload to simulate app starting offline
     await page.reload();
-    await page.waitForSelector('h1:has-text("Stream Profiles")');
+    await page.waitForSelector('h1:has-text("Presets")');
 
     // The warning banner appears when the health check fails
-    await expect(page.locator('text=Unable to connect to Twitch services')).toBeVisible();
+    await expect(page.getByText("Can't reach Twitch right now")).toBeVisible();
 
     // App should still be functional for local operations — New Profile stays navigable
     const newProfileLink = page.locator('a[href="/profile/new"]').filter({ visible: true }).first();
@@ -200,7 +201,7 @@ test.describe('Offline Functionality', () => {
 
   test('should disable API-dependent actions when offline', async ({ page, context }) => {
     // Ensure we have a profile
-    const hasProfiles = await page.locator('article.scandi-card').count() > 0;
+    const hasProfiles = await page.locator('[data-testid="preset-card"]').count() > 0;
 
     if (!hasProfiles) {
       await page.locator('a[href="/profile/new"]').filter({ visible: true }).first().click();
@@ -208,7 +209,7 @@ test.describe('Offline Functionality', () => {
       await page.fill('input[name="title"]', 'For API testing');
       await selectCategory(page, 'Just Chatting');
       await page.click('button[type="submit"]');
-      await page.waitForURL('/');
+      await page.waitForURL('/presets');
     }
 
     // Health is only pessimistic with a stored token (see seedAuthToken)
@@ -217,12 +218,12 @@ test.describe('Offline Functionality', () => {
     // Cut external origins; the localhost document still reloads
     simulateOffline(context);
     await page.reload();
-    await page.waitForSelector('h1:has-text("Stream Profiles")');
+    await page.waitForSelector('h1:has-text("Presets")');
 
-    // The warning banner appears and "Apply Profile" is disabled
-    await expect(page.locator('text=Unable to connect to Twitch services')).toBeVisible();
+    // The warning banner appears and "Apply to Stream" is disabled
+    await expect(page.getByText("Can't reach Twitch right now")).toBeVisible();
 
-    const applyButton = page.locator('button:has-text("Apply Profile")').first();
+    const applyButton = page.locator('button:has-text("Apply to Stream")').first();
     await expect(applyButton).toBeVisible();
     await expect(applyButton).toBeDisabled();
   });

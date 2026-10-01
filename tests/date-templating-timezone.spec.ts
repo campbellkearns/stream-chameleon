@@ -17,8 +17,8 @@ test.describe('Date/day templating timezone agreement', () => {
     // Local calendar day: Wednesday 2026-01-14. UTC calendar day: 2026-01-15.
     await page.clock.setFixedTime(new Date('2026-01-14T23:30:00-08:00'));
 
-    await page.goto('/');
-    await page.waitForSelector('h1:has-text("Stream Profiles")', { timeout: 10000 });
+    await page.goto('/presets');
+    await page.waitForSelector('h1:has-text("Presets")', { timeout: 10000 });
 
     // Create a profile templated with both placeholders
     await page.locator('a[href="/profile/new"]').filter({ visible: true }).first().click();
@@ -30,11 +30,11 @@ test.describe('Date/day templating timezone agreement', () => {
     await page.waitForTimeout(500);
     await page.locator('button[role="option"]:has-text("Just Chatting")').first().click();
     await page.click('button[type="submit"]');
-    await page.waitForURL('/');
+    await page.waitForURL('/presets');
 
     // Both placeholders must agree on the local calendar day (Wednesday, 2026-01-14),
     // not one rendering from the UTC day (2026-01-15)
-    const profileCard = page.locator('article.scandi-card', { hasText: 'Midnight Agreement Test' });
+    const profileCard = page.locator('[data-testid="preset-card"]', { hasText: 'Midnight Agreement Test' });
     await expect(profileCard.locator('text=Wednesday Stream - 2026-01-14')).toBeVisible();
   });
 });

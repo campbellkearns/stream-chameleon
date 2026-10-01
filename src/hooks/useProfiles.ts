@@ -6,44 +6,8 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { StreamProfile, CreateProfileInput, UpdateProfileInput, SentChannelPayload } from '@/types/Profile';
-import { getProfileRepository, type RepositoryResult } from '@/repositories/ProfileRepository';
-import { getApplyHistoryRepository } from '@/repositories/ApplyHistoryRepository';
-import { processTitle, createApplyRecord } from '@/types/ProfileUtils';
-import { getTwitchAPI, isAuthError, isNetworkError, buildSentPayload, type APIResult } from '@/lib/api/twitchAPI';
-
-/**
- * Record every apply attempt — success and failure — in the apply-history
- * store. Success rows carry the exact wire payload; failed rows record what
- * the apply would have sent plus the error (evidence of the attempt, offered
- * with no actions downstream). A history failure must never mask the apply
- * outcome, so it is logged rather than thrown — the same posture the API
- * client uses for category caching.
- */
-const recordApplyHistory = async (
-  profile: StreamProfile,
-  result: APIResult<SentChannelPayload>
-): Promise<void> => {
-  try {
-    const record = createApplyRecord({
-      profileId: profile.id,
-      profileName: profile.name,
-      payload: result.success && result.data ? result.data : buildSentPayload(profile),
-      source: 'apply',
-      result: result.success ? 'success' : 'failed',
-      ...(result.success
-        ? {}
-        : { error: result.error?.message || 'Failed to apply profile to stream' })
-    });
-
-    const appendResult = await getApplyHistoryRepository().append(record);
-    if (!appendResult.success) {
-      console.error('Failed to persist apply history record:', appendResult.error);
-    }
-  } catch (error) {
-    console.error('Unexpected failure recording apply history:', error);
-  }
-};
+import type { StreamProfile, CreateProfileInput, UpdateProfileInput } from '@/types/Profile';
+import { getProfileRepository } from '@/repositories/ProfileRepository';
 
 /**
  * Loading state interface
@@ -244,54 +208,6 @@ export const useProfiles = () => {
     loadProfiles();
   }, [loadProfiles]);
 
-  /**
-   * Apply a profile to Twitch stream
-   */
-  const applyProfile = useCallback(async (profile: StreamProfile): Promise<boolean> => {
-    try {
-      const twitchAPI = getTwitchAPI();
-      const result = await twitchAPI.applyProfile(profile);
-
-      // History records every attempt, success or failure, before the
-      // outcome is surfaced to the caller.
-      await recordApplyHistory(profile, result);
-
-      if (result.success) {
-        console.log(`Successfully applied profile "${profile.name}" to Twitch stream`);
-        return true;
-      } else {
-        console.error('Failed to apply profile:', result.error);
-        
-        // Handle specific error types
-        if (isAuthError(result.error)) {
-          setLoadingState(prev => ({
-            ...prev,
-            error: 'Authentication required. Please sign in to apply profiles to your stream.'
-          }));
-        } else if (isNetworkError(result.error)) {
-          setLoadingState(prev => ({
-            ...prev,
-            error: 'Network error. Please check your connection and try again.'
-          }));
-        } else {
-          setLoadingState(prev => ({
-            ...prev,
-            error: result.error?.message || 'Failed to apply profile to stream'
-          }));
-        }
-        
-        return false;
-      }
-    } catch (error) {
-      console.error('Error applying profile:', error);
-      setLoadingState(prev => ({
-        ...prev,
-        error: error instanceof Error ? error.message : 'An unexpected error occurred'
-      }));
-      return false;
-    }
-  }, []);
-
   // Computed values
   const computedValues = useMemo(() => ({
     profileCount: profiles.length,
@@ -324,7 +240,6 @@ export const useProfiles = () => {
     getProfile,
     searchProfiles,
     refreshProfiles,
-    applyProfile,
     
     // Utils
     clearError,

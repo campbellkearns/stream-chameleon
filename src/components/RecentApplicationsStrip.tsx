@@ -15,10 +15,11 @@
  */
 
 import { useState } from 'react';
+import { ChevronRight, Undo2, X } from 'lucide-react';
 import type { ApplyRecord } from '@/types/Profile';
 import type { useApplyHistory } from '@/hooks/useApplyHistory';
 
-/** The hook result the Dashboard owns and passes down. */
+/** The hook result StreamControlProvider owns and passes down. */
 export type ApplyHistory = ReturnType<typeof useApplyHistory>;
 
 /** Records visible before the expander (feature spec: newest 5 + expander). */
@@ -27,7 +28,8 @@ const VISIBLE_RECORDS = 5;
 const SOURCE_LABELS: Record<ApplyRecord['source'], string> = {
   'apply': 'applied',
   'apply-again': 'applied again',
-  'revert': 'reverted'
+  'revert': 'reverted',
+  'edit': 'edited'
 };
 
 function formatAppliedAt(appliedAt: number): string {
@@ -46,7 +48,7 @@ interface HistoryRowProps {
   onApplyAgain: (record: ApplyRecord) => void;
 }
 
-function HistoryRow({ record, isPending, actionsDisabled, onApplyAgain }: HistoryRowProps): JSX.Element {
+function HistoryRow({ record, isPending, actionsDisabled, onApplyAgain }: HistoryRowProps) {
   const failed = record.result === 'failed';
 
   return (
@@ -59,21 +61,21 @@ function HistoryRow({ record, isPending, actionsDisabled, onApplyAgain }: Histor
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium text-neutral-900">{record.profileName}</span>
-            <span className="text-xs text-neutral-600 bg-neutral-100 rounded px-1.5 py-0.5">
+            <span className="text-sm font-semibold text-fg-strong">{record.profileName}</span>
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-fg-muted bg-raised border border-line rounded px-1.5 py-0.5">
               {SOURCE_LABELS[record.source]}
             </span>
             {failed && (
-              <span className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-1.5 py-0.5">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-red-400 bg-raised border border-line rounded px-1.5 py-0.5">
                 failed
               </span>
             )}
-            <span className="text-xs text-neutral-400">{formatAppliedAt(record.appliedAt)}</span>
+            <span className="text-xs text-fg-subtle">{formatAppliedAt(record.appliedAt)}</span>
           </div>
-          <p className="text-sm text-neutral-600 truncate" title={record.payload.title}>
+          <p className="text-sm text-fg truncate" title={record.payload.title}>
             {record.payload.title}
           </p>
-          <p className="text-xs text-neutral-500">
+          <p className="text-xs text-fg-muted">
             {record.payload.categoryName} · {record.payload.tags.length}{' '}
             tag{record.payload.tags.length === 1 ? '' : 's'}
             {failed && record.error ? ` · ${record.error}` : ''}
@@ -86,11 +88,7 @@ function HistoryRow({ record, isPending, actionsDisabled, onApplyAgain }: Histor
             disabled={actionsDisabled}
             data-testid="apply-again-button"
             title={`Re-apply "${record.payload.title}" exactly as it was sent`}
-            className={`text-sm whitespace-nowrap px-3 py-1.5 rounded border transition-colors ${
-              actionsDisabled
-                ? 'border-neutral-200 bg-neutral-50 text-neutral-400 cursor-not-allowed'
-                : 'border-neutral-200 bg-neutral-100 text-neutral-700 hover:bg-neutral-200 cursor-pointer'
-            }`}
+            className="shrink-0 text-xs font-semibold whitespace-nowrap px-2.5 py-1.5 rounded-md bg-raised border border-line text-fg hover:bg-raised-hover hover:border-line-strong transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isPending ? 'Applying…' : 'Apply again'}
           </button>
@@ -102,14 +100,14 @@ function HistoryRow({ record, isPending, actionsDisabled, onApplyAgain }: Histor
 
 interface RecentApplicationsStripProps {
   history: ApplyHistory;
-  /** Called after a replay PATCH succeeds — the Dashboard bumps the status card's refresh nonce with it. */
+  /** Called after a replay PATCH succeeds, so channel info and ACTIVE state can catch up. */
   onReplaySuccess: () => void;
 }
 
 export function RecentApplicationsStrip({
   history,
   onReplaySuccess
-}: RecentApplicationsStripProps): JSX.Element | null {
+}: RecentApplicationsStripProps) {
   const [open, setOpen] = useState(true);
   const [showAll, setShowAll] = useState(false);
 
@@ -156,17 +154,17 @@ export function RecentApplicationsStrip({
     <section
       data-testid="recent-applications"
       aria-label="Recent applications"
-      className="scandi-card mb-8"
+      className="card"
     >
-      <div className="flex items-center justify-between gap-4 mb-2">
+      <div className="flex items-center justify-between gap-3 mb-3">
         <button
           type="button"
           onClick={() => setOpen(currentOpen => !currentOpen)}
           aria-expanded={open}
           data-testid="recent-applications-toggle"
-          className="flex items-center gap-2 text-lg font-medium text-neutral-900 bg-transparent border-none p-0 cursor-pointer"
+          className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-fg-subtle hover:text-fg bg-transparent border-none p-0 cursor-pointer"
         >
-          <span aria-hidden="true">{open ? '▾' : '▸'}</span>
+          <ChevronRight className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-90' : ''}`} aria-hidden="true" />
           Recent applications
         </button>
         <button
@@ -179,12 +177,9 @@ export function RecentApplicationsStrip({
               ? `Re-apply "${revertTarget.payload.title}" — the apply before your most recent`
               : 'Revert needs at least two successful applications'
           }
-          className={`text-sm px-3 py-1.5 rounded border transition-colors ${
-            !canRevert || acting
-              ? 'border-neutral-200 bg-neutral-50 text-neutral-400 cursor-not-allowed'
-              : 'border-neutral-200 bg-neutral-100 text-neutral-700 hover:bg-neutral-200 cursor-pointer'
-          }`}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-md bg-raised border border-line text-fg hover:bg-raised-hover hover:border-line-strong transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
+          <Undo2 className="w-3.5 h-3.5" aria-hidden="true" />
           {revertPending ? 'Reverting…' : 'Revert'}
         </button>
       </div>
@@ -194,7 +189,7 @@ export function RecentApplicationsStrip({
           {error && (
             <div
               data-testid="history-load-error"
-              className="flex items-center justify-between gap-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2 mb-3"
+              className="flex items-center justify-between gap-3 text-sm text-red-400 bg-raised border border-line border-l-4 border-l-red-500 rounded-md px-3 py-2 mb-3"
             >
               <span>{error}</span>
               <button type="button" onClick={refreshHistory} className="underline cursor-pointer">
@@ -206,16 +201,16 @@ export function RecentApplicationsStrip({
           {actionError && (
             <div
               data-testid="replay-error"
-              className="flex items-center justify-between gap-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2 mb-3"
+              className="flex items-center justify-between gap-3 text-sm text-red-400 bg-raised border border-line border-l-4 border-l-red-500 rounded-md px-3 py-2 mb-3"
             >
               <span>{actionError}</span>
-              <button type="button" onClick={clearActionError} className="cursor-pointer" aria-label="Dismiss error">
-                ✕
+              <button type="button" onClick={clearActionError} className="text-fg-subtle hover:text-fg cursor-pointer" aria-label="Dismiss error">
+                <X className="w-4 h-4" />
               </button>
             </div>
           )}
 
-          <ul className="divide-y divide-neutral-100">
+          <ul className="divide-y divide-line">
             {visibleRecords.map(record => (
               <HistoryRow
                 key={record.id}
@@ -233,7 +228,7 @@ export function RecentApplicationsStrip({
               onClick={() => setShowAll(next => !next)}
               data-testid="history-expander"
               aria-expanded={showAll}
-              className="mt-3 text-sm text-neutral-600 underline cursor-pointer bg-transparent border-none p-0"
+              className="mt-3 text-xs text-fg-muted hover:text-fg-strong underline cursor-pointer bg-transparent border-none p-0"
             >
               {showAll ? 'Show fewer' : `Show all ${records.length} applications`}
             </button>

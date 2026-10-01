@@ -189,7 +189,7 @@ async function updateDirect(
 }
 
 /**
- * Builds the three tools in the shape `navigator.modelContext.registerTool` expects.
+ * Builds the three tools in the shape `document.modelContext.registerTool` expects.
  *
  * The returned array is stable content-wise but freshly allocated per call — callers should
  * memoize it so the registration effect doesn't churn.
@@ -233,3 +233,20 @@ export function createStreamProfileTools(deps: StreamProfileToolDeps): ModelCont
     },
   ];
 }
+
+/** A tool's public description, for showing what an agent can call. */
+export interface StreamProfileToolInfo {
+  name: string;
+  description: string;
+  inputSchema: Record<string, unknown>;
+}
+
+/**
+ * Name, description, and schema of every tool, taken from the same definitions that get
+ * registered so the WebMCP Hub's list can't drift from what agents actually see.
+ */
+export const STREAM_PROFILE_TOOL_INFO: readonly StreamProfileToolInfo[] = createStreamProfileTools({
+  getProfiles: () => [],
+  applyProfile: async () => ({ success: false }),
+  resolveCategory: async () => null,
+}).map(({ name, description, inputSchema }) => ({ name, description, inputSchema }));

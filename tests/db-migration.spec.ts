@@ -130,7 +130,7 @@ test.describe('DB v2 additive migration', () => {
 
     // Booting the app opens the seeded v1 database under v2. If the upgrade
     // rejected, wiped, or dropped stores, every assertion below fails.
-    await page.goto('/');
+    await page.goto('/presets');
     await expect(page.getByRole('heading', { name: 'Morning Pages' })).toBeVisible({ timeout: 15000 });
     await expect(page.getByRole('heading', { name: 'Evening Coding' })).toBeVisible();
 
@@ -164,11 +164,11 @@ test.describe('DB v2 additive migration', () => {
   });
 
   test('fresh install creates every store including applyHistory at v2', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/presets');
     // The empty state renders only after the profile load resolves, which means the
     // app's own v2 open has completed — probing earlier races it on slow engines
     // (Mobile Safari) and can create a v1 database underneath the probe.
-    await expect(page.getByRole('heading', { name: 'No profiles yet' })).toBeVisible({
+    await expect(page.getByRole('heading', { name: 'No presets yet' })).toBeVisible({
       timeout: 15000,
     });
 

@@ -47,11 +47,12 @@ export interface StreamUpdateRequest {
 
 /**
  * Build the exact payload an apply sends to Twitch: processed title, tags
- * capped at 10, and game_id omitted for manual categories. The PATCH body
+ * capped at 10, and game_id omitted for manual categories. Takes a profile
+ * or an ad-hoc Live edit, which share the same title/category/tags shape. The PATCH body
  * and apply-history records both derive from this function, so stored wire
  * truth has exactly one construction site and can never drift from the wire.
  */
-export const buildSentPayload = (profile: StreamProfile): SentChannelPayload => {
+export const buildSentPayload = (profile: Pick<StreamProfile, 'title' | 'category' | 'tags'>): SentChannelPayload => {
   const processedTitle = processTitle(profile.title);
 
   return {

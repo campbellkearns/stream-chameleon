@@ -1,21 +1,21 @@
 <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
   <!-- Apple Touch Icon - 180x180 for iOS -->
-  <rect width="180" height="180" rx="36" fill="#FAFAF9"/>
-  <rect x="16" y="16" width="148" height="148" rx="28" fill="#F0FDF4"/>
+  <rect width="180" height="180" rx="36" fill="#0D0E12"/>
+  <rect x="16" y="16" width="148" height="148" rx="28" fill="#0D0E12"/>
   <g transform="translate(50, 50)">
     <!-- Streaming Waves -->
-    <g stroke="#86EFAC" stroke-width="4" fill="none" stroke-linecap="round">
-      <path d="M44 24 C60 24, 64 32, 64 44 C64 56, 60 64, 44 64" opacity="1"/>
-      <path d="M44 12 C72 12, 76 26, 76 44 C76 62, 72 76, 44 76" opacity="0.7"/>
-      <path d="M44 0 C84 0, 88 20, 88 44 C88 68, 84 88, 44 88" opacity="0.4"/>
+    <g stroke="#6366F1" stroke-width="4" fill="none" stroke-linecap="round">
+      <path d="M44 24 C60 24, 64 32, 64 44 C64 56, 60 64, 44 64"/>
+      <path d="M44 12 C72 12, 76 26, 76 44 C76 62, 72 76, 44 76"/>
+      <path d="M44 0 C84 0, 88 20, 88 44 C88 68, 84 88, 44 88"/>
     </g>
     <!-- Central Point -->
-    <circle cx="44" cy="44" r="6" fill="#86EFAC"/>
-    <circle cx="44" cy="44" r="3" fill="#FAFAF9"/>
+    <circle cx="44" cy="44" r="6" fill="#6366F1"/>
+    <circle cx="44" cy="44" r="3" fill="#0D0E12"/>
     <!-- Profile Indicator -->
-    <rect x="16" y="38" width="24" height="12" rx="3" fill="#86EFAC" opacity="0.8"/>
-    <rect x="20" y="42" width="6" height="4" rx="1" fill="#FAFAF9"/>
-    <rect x="28" y="43" width="10" height="1" rx="0.5" fill="#FAFAF9"/>
-    <rect x="28" y="45" width="8" height="1" rx="0.5" fill="#FAFAF9"/>
+    <rect x="16" y="38" width="24" height="12" rx="3" fill="#6366F1"/>
+    <rect x="20" y="42" width="6" height="4" rx="1" fill="#0D0E12"/>
+    <rect x="28" y="43" width="10" height="1" rx="0.5" fill="#0D0E12"/>
+    <rect x="28" y="45" width="8" height="1" rx="0.5" fill="#0D0E12"/>
   </g>
 </svg>

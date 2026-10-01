@@ -106,7 +106,7 @@ test.describe('Manual category payload and styled validation', () => {
     await page.fill('input[name="title"]', 'Styled Error Check Title');
 
     // Submit without selecting a category
-    await page.click('button:has-text("Create Profile")');
+    await page.click('button:has-text("Create Preset")');
 
     // The app's styled validation message must render — a native validation
     // bubble blocking the submit event would leave it invisible
@@ -152,13 +152,14 @@ test.describe('Manual category payload and styled validation', () => {
     await page.waitForTimeout(400); // blur fallback commits after a 200ms delay
 
     // Save the profile
-    await page.click('button:has-text("Create Profile")');
-    await expect(page).toHaveURL('/', { timeout: 10_000 });
-    await expect(page.locator(`text=${PROFILE_NAME}`)).toBeVisible();
+    await page.click('button:has-text("Create Preset")');
+    await expect(page).toHaveURL('/presets', { timeout: 10_000 });
+    // Scope to the card heading: the name also appears in the Quick Morph chips
+    await expect(page.locator('[data-testid="preset-card"]').getByRole('heading', { name: PROFILE_NAME })).toBeVisible();
 
     // Apply it to the (mocked) Twitch channel
     page.on('dialog', (dialog) => dialog.accept());
-    await page.locator('article.scandi-card').first().getByRole('button', { name: /apply profile/i }).click();
+    await page.locator('[data-testid="preset-card"]').first().getByRole('button', { name: /apply to stream/i }).click();
 
     // The PATCH must actually have been made, else the assertions below are vacuous
     await expect

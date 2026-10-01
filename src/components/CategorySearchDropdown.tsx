@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useCategorySearch, useCategories } from '@/hooks/useCategories';
 import type { StreamCategory } from '@/types/Profile';
+import { boxArtSrc } from '@/lib/presetStyle';
 import { manualCategoryId } from '@/types/ProfileUtils';
 
 interface CategorySearchDropdownProps {
@@ -139,7 +140,7 @@ export function CategorySearchDropdown({
           onFocus={handleInputFocus}
           onBlur={handleInputBlur}
           onKeyDown={handleKeyDown}
-          className={`scandi-input w-full pr-20 ${error ? 'border-red-300 bg-red-50' : ''}`}
+          className={`input w-full pr-20 ${error ? 'border-red-800 bg-surface' : ''}`}
           placeholder="Search for a category..."
           disabled={disabled}
           aria-required={required}
@@ -152,7 +153,7 @@ export function CategorySearchDropdown({
         {/* Loading indicator */}
         {isSearching && (
           <div className="absolute right-12 top-1/2 -translate-y-1/2">
-            <span className="animate-spin text-neutral-400">⟳</span>
+            <span className="animate-spin text-fg-subtle">⟳</span>
           </div>
         )}
 
@@ -161,7 +162,7 @@ export function CategorySearchDropdown({
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors px-2 py-1"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-subtle hover:text-fg transition-colors px-2 py-1"
             aria-label="Clear category"
           >
             ✕
@@ -173,11 +174,11 @@ export function CategorySearchDropdown({
       {isOpen && !disabled && (
         <div
           id="category-dropdown"
-          className="absolute z-10 w-full mt-1 bg-white border border-neutral-200 rounded-lg shadow-lg max-h-64 overflow-y-auto"
+          className="absolute z-10 w-full mt-1 bg-surface border border-line rounded-lg shadow-lg max-h-64 overflow-y-auto"
           role="listbox"
         >
           {isSearching ? (
-            <div className="px-4 py-8 text-center text-neutral-500">
+            <div className="px-4 py-8 text-center text-fg-muted">
               <span className="animate-spin inline-block">⟳</span>
               <p className="mt-2 text-sm">Searching categories...</p>
             </div>
@@ -194,8 +195,8 @@ export function CategorySearchDropdown({
             return categoriesToShow.length > 0 ? (
               <>
                 {!query && popularCategories.length > 0 && (
-                  <div className="px-4 pt-3 pb-2 border-b border-neutral-100">
-                    <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide">
+                  <div className="px-4 pt-3 pb-2 border-b border-line">
+                    <p className="text-xs font-medium text-fg-muted uppercase tracking-wide">
                       Popular Categories
                     </p>
                   </div>
@@ -206,30 +207,30 @@ export function CategorySearchDropdown({
                       <button
                         type="button"
                         onClick={() => handleSelectCategory(category)}
-                        className="w-full px-4 py-3 text-left hover:bg-neutral-50 transition-colors flex items-center space-x-3"
+                        className="w-full px-4 py-3 text-left hover:bg-raised transition-colors flex items-center space-x-3"
                         role="option"
                         aria-selected={value?.id === category.id}
                       >
                         {/* Category icon/artwork placeholder */}
                         {category.boxArtUrl ? (
                           <img
-                            src={category.boxArtUrl}
+                            src={boxArtSrc(category.boxArtUrl, 80, 112)}
                             alt=""
                             className="w-10 h-14 object-cover rounded"
                             loading="lazy"
                           />
                         ) : (
-                          <div className="w-10 h-14 bg-neutral-100 rounded flex items-center justify-center text-2xl overflow-hidden">
+                          <div className="w-10 h-14 bg-raised rounded flex items-center justify-center text-2xl overflow-hidden">
                             🎮
                           </div>
                         )}
 
                         <div className="flex-1 min-w-[60px]">
-                          <p className="font-medium text-neutral-900 truncate">
+                          <p className="font-medium text-fg-strong truncate">
                             {category.name}
                           </p>
                           {value?.id === category.id && (
-                            <p className="text-xs text-green-600 mt-1">✓ Selected</p>
+                            <p className="text-xs text-emerald-400 mt-1">✓ Selected</p>
                           )}
                         </div>
                       </button>
@@ -239,18 +240,18 @@ export function CategorySearchDropdown({
               </>
             ) : query ? (
               <div className="px-4 py-8 text-center">
-                <p className="text-neutral-600 mb-2">No categories found</p>
-                <p className="text-xs text-neutral-500">
+                <p className="text-fg-muted mb-2">No categories found</p>
+                <p className="text-xs text-fg-muted">
                   You can still use "{query}" as a manual entry
                 </p>
               </div>
             ) : categoriesLoading ? (
-              <div className="px-4 py-8 text-center text-neutral-500">
+              <div className="px-4 py-8 text-center text-fg-muted">
                 <span className="animate-spin inline-block">⟳</span>
                 <p className="mt-2 text-sm">Loading categories...</p>
               </div>
             ) : (
-              <div className="px-4 py-8 text-center text-neutral-500">
+              <div className="px-4 py-8 text-center text-fg-muted">
                 <p className="text-sm">No categories available</p>
                 <p className="text-xs mt-1">Type to search or enter manually</p>
               </div>
@@ -261,12 +262,12 @@ export function CategorySearchDropdown({
 
       {/* Error message */}
       {error && (
-        <p className="text-red-600 text-xs mt-1">{error}</p>
+        <p className="text-red-400 text-xs mt-1">{error}</p>
       )}
 
       {/* Help text */}
       {!error && (
-        <p className="text-xs text-neutral-500 mt-1">
+        <p className="text-xs text-fg-muted mt-1">
           Search for a Twitch category or type manually
         </p>
       )}

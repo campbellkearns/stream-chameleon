@@ -36,7 +36,7 @@ describe('AgentControlIndicator', () => {
     const html = renderToStaticMarkup(<AgentControlIndicator isSupported={false} isAuthenticated={true} />);
 
     expect(html).toContain('Browser unsupported');
-    expect(html).toContain('Chrome 146');
+    expect(html).toContain('Chrome 150');
     expect(html).toContain('data-agent-control-state="unsupported"');
   });
 
@@ -50,8 +50,8 @@ describe('AgentControlIndicator', () => {
 
     // Both use the same neutral text color class, so the label text and icon
     // are the only things a reader (sighted or not) can tell them apart by.
-    expect(signedOutHtml).toContain('text-neutral-500');
-    expect(unsupportedHtml).toContain('text-neutral-500');
+    expect(signedOutHtml).toContain('text-fg-subtle');
+    expect(unsupportedHtml).toContain('text-fg-subtle');
     expect(signedOutHtml).not.toBe(unsupportedHtml);
   });
 });

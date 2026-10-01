@@ -65,6 +65,39 @@ export class CategoryRepository {
   }
 
   /**
+   * Get cached categories, most recently cached first
+   */
+  async getRecent(limit: number): Promise<RepositoryResult<StreamCategory[]>> {
+    try {
+      const db = await getDB();
+      const cachedCategories = await db.getAll<CachedCategory>(this.storeName);
+
+      const categories = cachedCategories
+        .sort((a, b) => new Date(b.cachedAt).getTime() - new Date(a.cachedAt).getTime())
+        .slice(0, limit)
+        .map(cached => ({
+          id: cached.id,
+          name: cached.name,
+          boxArtUrl: cached.boxArtUrl
+        }));
+
+      return {
+        success: true,
+        data: categories
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: {
+          message: 'Failed to fetch recent categories',
+          code: 'STORAGE_ERROR',
+          details: error
+        }
+      };
+    }
+  }
+
+  /**
    * Search categories by name (cached first, then API if needed)
    */
   async search(query: string, limit?: number): Promise<RepositoryResult<StreamCategory[]>> {

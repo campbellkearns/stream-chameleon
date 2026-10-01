@@ -11,19 +11,19 @@ import { useWebMCP, type UseWebMCPOptions } from './useWebMCP';
 
 interface MockRegistry {
   registerTool: ReturnType<typeof vi.fn>;
-  unregisterTool: ReturnType<typeof vi.fn>;
 }
 
-/** Installs a mock `navigator.modelContext` (same shape the adapter targets). */
+/** Installs a mock `document.modelContext` (spec shape: async register, unregister by abort). */
 function mockModelContext(): MockRegistry {
-  const registry = { registerTool: vi.fn(), unregisterTool: vi.fn() };
-  Object.defineProperty(navigator, 'modelContext', { value: registry, configurable: true });
+  const registry = { registerTool: vi.fn() };
+  registry.registerTool.mockResolvedValue(undefined);
+  Object.defineProperty(document, 'modelContext', { value: registry, configurable: true });
   return registry;
 }
 
-/** Removes any `navigator.modelContext` installed by a previous test. */
+/** Removes any `document.modelContext` installed by a previous test. */
 function clearModelContext() {
-  Object.defineProperty(navigator, 'modelContext', { value: undefined, configurable: true });
+  Object.defineProperty(document, 'modelContext', { value: undefined, configurable: true });
 }
 
 function makeProfile(name: string): StreamProfile {
@@ -70,8 +70,11 @@ function registeredNames(registry: MockRegistry): string[] {
   return registry.registerTool.mock.calls.map((call: [ModelContextTool]) => call[0].name);
 }
 
+/** Tools whose registration signal has been aborted, in registration order. */
 function unregisteredNames(registry: MockRegistry): string[] {
-  return registry.unregisterTool.mock.calls.map((call: [string]) => call[0]);
+  return registry.registerTool.mock.calls
+    .filter(call => (call[1] as { signal: AbortSignal }).signal.aborted)
+    .map(call => (call[0] as ModelContextTool).name);
 }
 
 describe('useWebMCP', () => {
@@ -112,7 +115,6 @@ describe('useWebMCP', () => {
 
   it('unregisters on sign-out', () => {
     const harness = renderUseWebMCP(options());
-    registry.registerTool.mockClear();
 
     harness.rerender(options({ isAuthenticated: false }));
 
@@ -121,7 +123,7 @@ describe('useWebMCP', () => {
       'activate_stream_profile',
       'update_stream_details',
     ]);
-    expect(registry.registerTool).not.toHaveBeenCalled();
+    expect(registry.registerTool).toHaveBeenCalledTimes(3);
   });
 
   it('unregisters on unmount', () => {
@@ -148,7 +150,7 @@ describe('useWebMCP', () => {
     harness.rerender(options({ profiles: [makeProfile('Coding Stream')] }));
 
     expect(registry.registerTool).toHaveBeenCalledTimes(3);
-    expect(registry.unregisterTool).not.toHaveBeenCalled();
+    expect(unregisteredNames(registry)).toEqual([]);
   });
 
   it('serves current profiles to an already-registered tool', async () => {

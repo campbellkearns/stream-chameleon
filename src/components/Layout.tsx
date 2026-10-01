@@ -1,25 +1,55 @@
-import { Outlet, Link, useLocation } from 'react-router-dom'
+import { Outlet, Link, NavLink } from 'react-router-dom'
 import { useState } from 'react'
+import { Radio, Layers, Bot, LogOut, Link2, Zap } from 'lucide-react'
 import { useAuthState } from '@/hooks/useAuth'
-import { useProfiles } from '@/hooks/useProfiles'
-import { useWebMCP } from '@/hooks/useWebMCP'
 import { getTwitchAuth } from '@/lib/auth/twitchAuth'
+import { StreamControlProvider, useStreamControl } from '@/hooks/useStreamControl'
+import { presetIcon } from '@/lib/presetStyle'
 import AgentControlIndicator from '@/components/AgentControlIndicator'
 
-export default function Layout(): JSX.Element {
-  const location = useLocation()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const { isAuthenticated, user, isLoading } = useAuthState()
-  const { profiles } = useProfiles()
+const TABS = [
+  { to: '/', label: 'Live', icon: Radio, end: true },
+  { to: '/presets', label: 'Presets', icon: Layers, end: false },
+  { to: '/webmcp', label: 'WebMCP', icon: Bot, end: false },
+]
 
-  // Registers the three WebMCP tools while signed in (spec deliverable 2). Layout wraps every
-  // route and persists across navigation, so registration survives page-to-page transitions
-  // instead of churning the browser's tool registry on each route change.
-  useWebMCP({ isAuthenticated, profiles })
-  
-  const isActiveRoute = (path: string): boolean => {
-    return location.pathname === path
-  }
+const MAX_QUICK_MORPH_CHIPS = 5
+
+function QuickMorphChips() {
+  const { profiles, activeProfileId, applyingProfileId, applyProfile, canApply, apiStatusMessage } = useStreamControl()
+
+  if (profiles.length === 0) return null
+
+  return (
+    <div className="hidden lg:flex items-center gap-1.5 pb-2">
+      <span className="text-xs text-fg-subtle font-medium mr-1">Quick Morph</span>
+      {profiles.slice(0, MAX_QUICK_MORPH_CHIPS).map((profile) => {
+        const isActive = activeProfileId === profile.id
+        const isApplying = applyingProfileId === profile.id
+        return (
+          <button
+            key={profile.id}
+            onClick={() => applyProfile(profile)}
+            disabled={!canApply || applyingProfileId !== null}
+            title={canApply ? `Apply "${profile.name}"` : apiStatusMessage}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium border transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+              isActive
+                ? 'bg-raised border-accent text-fg-strong'
+                : 'bg-surface border-line text-fg-muted hover:bg-raised hover:text-fg'
+            }`}
+          >
+            {isApplying ? <Zap className="w-3 h-3 text-accent-fg" /> : <span aria-hidden="true">{presetIcon(profile)}</span>}
+            <span className="max-w-28 truncate">{profile.name}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function AccountControls() {
+  const { isAuthenticated, user, isLoading } = useAuthState()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const handleSignOut = async () => {
     try {
@@ -30,190 +60,118 @@ export default function Layout(): JSX.Element {
     }
   }
 
-  const navItems = [
-    { path: '/', label: 'Profiles', icon: '📋' },
-    { path: '/profile/new', label: 'New Profile', icon: '➕' },
-    ...(isAuthenticated ? [] : [{ path: '/auth', label: 'Connect Twitch', icon: '🔗' }]),
-  ]
+  if (isLoading) return null
 
+  if (!isAuthenticated || !user) {
+    return (
+      <Link to="/auth" className="btn-secondary whitespace-nowrap">
+        <Link2 className="w-4 h-4" />
+        <span>Connect<span className="hidden sm:inline"> Twitch</span></span>
+      </Link>
+    )
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsMenuOpen(!isMenuOpen)}
+        className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-raised transition-colors"
+        aria-expanded={isMenuOpen}
+        aria-label="Account menu"
+      >
+        <img src={user.profile_image_url} alt="" className="w-8 h-8 rounded-full" />
+        <span className="hidden sm:block text-sm font-medium text-fg">{user.display_name}</span>
+      </button>
+
+      {isMenuOpen && (
+        <div className="absolute right-0 mt-2 w-56 rounded-lg bg-raised border border-line shadow-lg py-2 z-50">
+          <div className="px-4 py-2 border-b border-line">
+            <p className="text-sm font-medium text-fg-strong">{user.display_name}</p>
+            <p className="text-xs text-fg-muted">@{user.login} · Connected</p>
+          </div>
+          <button
+            onClick={() => {
+              setIsMenuOpen(false)
+              handleSignOut()
+            }}
+            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-fg-muted hover:text-fg-strong hover:bg-raised-hover transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Sign Out</span>
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default function Layout() {
   const currentYear = new Date().getFullYear()
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      {/* Navigation */}
-      <nav className="bg-white border-b border-neutral-200">
-        <div className="container mx-auto px-5 max-w-6xl">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link 
-              to="/" 
-              className="flex items-center space-x-3 text-2xl font-medium text-neutral-900 hover:text-primary transition-colors"
-            >
-              <span className="text-primary">🎮</span>
-              <span>Stream Chameleon</span>
+    <StreamControlProvider>
+      <div className="min-h-screen flex flex-col bg-bg">
+        {/* Header */}
+        <header className="sticky top-0 z-40 bg-surface border-b border-line">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 h-16 flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-3 text-fg-strong">
+              <span className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center">
+                <Radio className="w-5 h-5 text-white" />
+              </span>
+              <span className="text-base sm:text-lg font-semibold tracking-tight whitespace-nowrap">Stream Chameleon</span>
             </Link>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-4">
-              {/* Navigation Links */}
-              <div className="flex items-center space-x-1">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`
-                      flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
-                      ${isActiveRoute(item.path)
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'
-                      }
-                    `}
-                  >
-                    <span>{item.icon}</span>
-                    <span>{item.label}</span>
-                  </Link>
-                ))}
-              </div>
-              
-              {/* Authentication Status */}
-              {!isLoading && (
-                <div className="flex items-center space-x-3 pl-4 border-l border-neutral-200">
-                  <AgentControlIndicator />
-                  {isAuthenticated && user ? (
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center space-x-2">
-                        <img 
-                          src={user.profile_image_url} 
-                          alt={user.display_name}
-                          className="w-8 h-8 rounded-full"
-                        />
-                        <div className="text-right">
-                          <p className="text-sm font-medium text-neutral-900">{user.display_name}</p>
-                          <p className="text-xs text-neutral-500">Connected</p>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={handleSignOut}
-                        className="text-sm text-neutral-600 hover:text-neutral-900 px-3 py-1 rounded hover:bg-neutral-100 transition-colors"
-                        title="Sign out"
-                      >
-                        Sign Out
-                      </button>
-                    </div>
-                  ) : (
-                    <Link 
-                      to="/auth"
-                      className="flex items-center space-x-2 text-sm text-neutral-600 hover:text-neutral-900 px-3 py-2 rounded-lg hover:bg-neutral-100 transition-colors"
-                    >
-                      <span>🔗</span>
-                      <span>Connect Twitch</span>
-                    </Link>
-                  )}
-                </div>
-              )}
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="hidden md:block">
+                <AgentControlIndicator />
+              </span>
+              <AccountControls />
             </div>
-
-            {/* Mobile menu button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
           </div>
+        </header>
 
-          {/* Mobile Navigation */}
-          {isMenuOpen && (
-            <div className="md:hidden py-4 border-t border-neutral-200">
-              <div className="flex flex-col space-y-1">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setIsMenuOpen(false)}
-                    className={`
-                      flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all
-                      ${isActiveRoute(item.path)
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'
-                      }
-                    `}
-                  >
-                    <span>{item.icon}</span>
-                    <span>{item.label}</span>
-                  </Link>
-                ))}
-                
-                {/* Mobile Authentication Status */}
-                {!isLoading && (
-                  <div className="pt-4 mt-4 border-t border-neutral-200">
-                    <div className="px-4 pb-3">
-                      <AgentControlIndicator />
-                    </div>
-                    {isAuthenticated && user ? (
-                      <div className="space-y-3">
-                        <div className="flex items-center space-x-3 px-4 py-2">
-                          <img 
-                            src={user.profile_image_url} 
-                            alt={user.display_name}
-                            className="w-10 h-10 rounded-full"
-                          />
-                          <div>
-                            <p className="text-sm font-medium text-neutral-900">{user.display_name}</p>
-                            <p className="text-xs text-neutral-500">@{user.login} • Connected</p>
-                          </div>
-                        </div>
-                        <button 
-                          onClick={() => {
-                            setIsMenuOpen(false);
-                            handleSignOut();
-                          }}
-                          className="w-full text-left px-4 py-3 text-sm text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors"
-                        >
-                          Sign Out
-                        </button>
-                      </div>
-                    ) : (
-                      <Link 
-                        to="/auth"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center space-x-3 px-4 py-3 text-sm text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors"
-                      >
-                        <span>🔗</span>
-                        <span>Connect Twitch</span>
-                      </Link>
-                    )}
-                  </div>
-                )}
-              </div>
+        {/* Tab bar */}
+        <nav className="border-b border-line">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-2 flex items-end justify-between gap-4 overflow-x-auto">
+            <div className="flex items-center gap-1">
+              {TABS.map(({ to, label, icon: Icon, end }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={end}
+                  className={({ isActive }) =>
+                    `flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                      isActive
+                        ? 'border-accent text-fg-strong'
+                        : 'border-transparent text-fg-muted hover:text-fg'
+                    }`
+                  }
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{label}</span>
+                </NavLink>
+              ))}
             </div>
-          )}
-        </div>
-      </nav>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-5 py-8 max-w-6xl">
-        <Outlet />
-      </main>
+            <QuickMorphChips />
+          </div>
+        </nav>
 
-      {/* Footer */}
-      <footer className="border-t border-neutral-200 mt-8">
-        <div className="container mx-auto px-5 py-5 max-w-6xl">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between text-sm text-neutral-500 space-y-3 md:space-y-0">
+        {/* Main Content */}
+        <main className="flex-1 w-full mx-auto max-w-6xl px-4 sm:px-6 py-6">
+          <Outlet />
+        </main>
+
+        {/* Footer */}
+        <footer className="border-t border-line">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-sm text-fg-subtle">
             <p>© {currentYear} Stream Chameleon</p>
-            <div className="flex items-center space-x-4">
-              <Link
-                to="/support"
-                className="text-neutral-600 hover:text-primary transition-colors"
-              >
-                Support Development
-              </Link>
-            </div>
+            <Link to="/support" className="text-fg-muted hover:text-accent-fg transition-colors">
+              Support Development
+            </Link>
           </div>
-        </div>
-      </footer>
-    </div>
+        </footer>
+      </div>
+    </StreamControlProvider>
   )
 }

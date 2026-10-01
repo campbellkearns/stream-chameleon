@@ -8,15 +8,14 @@ import { test, expect } from '@playwright/test';
 test.describe('Profile Management', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to the app
-    await page.goto('/');
+    await page.goto('/presets');
 
     // Wait for app to load
-    await page.waitForSelector('h1:has-text("Stream Profiles")', { timeout: 10000 });
+    await page.waitForSelector('h1:has-text("Presets")', { timeout: 10000 });
   });
 
   test('should create a new profile', async ({ page }) => {
-    // Click "New Profile" — scope to a visible link: the nav bar's desktop-only
-    // New Profile link also matches but is hidden on mobile viewports
+    // Click "New Preset" — scope to a visible link in case another create link is hidden at this viewport
     await page.locator('a[href="/profile/new"]').filter({ visible: true }).first().click();
 
     // Wait for create form
@@ -39,21 +38,19 @@ test.describe('Profile Management', () => {
     await page.fill('input[name="tags"]', 'test, automated');
 
     // Submit the form
-    await page.click('button:has-text("Create Profile")');
+    await page.click('button:has-text("Create Preset")');
 
-    // Should redirect to dashboard
-    await expect(page).toHaveURL('/', { timeout: 5000 });
+    // Should redirect to presets
+    await expect(page).toHaveURL('/presets', { timeout: 5000 });
 
-    // Profile should appear in the list — match the card's name heading only,
-    // since 'Test Profile' is also a substring of the description text
-    await expect(page.getByRole('heading', { name: 'Test Profile' })).toBeVisible();
+    // Match the card's name heading only, since 'Test Profile' is also a substring of the description
+    await expect(page.locator('[data-testid="preset-card"]').getByRole('heading', { name: 'Test Profile' })).toBeVisible();
   });
 
   test('should list existing profiles', async ({ page }) => {
     // Check if we have profiles or empty state
-    const hasProfiles = await page.locator('article.scandi-card').count() > 0;
-    // Scope to the empty-state heading: the same text also appears in the header subtitle
-    const hasEmptyState = await page.getByRole('heading', { name: 'No profiles yet' }).isVisible();
+    const hasProfiles = await page.locator('[data-testid="preset-card"]').count() > 0;
+    const hasEmptyState = await page.getByRole('heading', { name: 'No presets yet' }).isVisible();
 
     // Either we should see profiles or the empty state
     expect(hasProfiles || hasEmptyState).toBeTruthy();
@@ -61,7 +58,7 @@ test.describe('Profile Management', () => {
 
   test('should edit an existing profile', async ({ page }) => {
     // First create a profile if none exist
-    const profileCards = await page.locator('article.scandi-card').count();
+    const profileCards = await page.locator('[data-testid="preset-card"]').count();
 
     if (profileCards === 0) {
       // Create a test profile first
@@ -76,12 +73,12 @@ test.describe('Profile Management', () => {
       const musicOption = page.locator('button[role="option"]:has-text("Music")').first();
       await musicOption.click();
 
-      await page.click('button:has-text("Create Profile")');
-      await page.waitForURL('/');
+      await page.click('button:has-text("Create Preset")');
+      await page.waitForURL('/presets');
     }
 
     // Hover over profile card to reveal edit button
-    const firstProfileCard = page.locator('article.scandi-card').first();
+    const firstProfileCard = page.locator('[data-testid="preset-card"]').first();
     await firstProfileCard.hover();
 
     // Click edit button
@@ -97,8 +94,8 @@ test.describe('Profile Management', () => {
     // Save changes
     await page.click('button:has-text("Save Changes")');
 
-    // Should redirect back to dashboard
-    await expect(page).toHaveURL('/');
+    // Should redirect back to presets
+    await expect(page).toHaveURL('/presets');
 
     // Updated title should be visible
     await expect(page.locator('text=Updated Title')).toBeVisible();
@@ -106,7 +103,7 @@ test.describe('Profile Management', () => {
 
   test('should delete a profile', async ({ page }) => {
     // First ensure we have a profile to delete
-    const profileCards = await page.locator('article.scandi-card').count();
+    const profileCards = await page.locator('[data-testid="preset-card"]').count();
 
     if (profileCards === 0) {
       // Create a test profile first
@@ -121,15 +118,15 @@ test.describe('Profile Management', () => {
       const artOption = page.locator('button[role="option"]:has-text("Art")').first();
       await artOption.click();
 
-      await page.click('button:has-text("Create Profile")');
-      await page.waitForURL('/');
+      await page.click('button:has-text("Create Preset")');
+      await page.waitForURL('/presets');
     }
 
     // Count profiles before deletion
-    const initialCount = await page.locator('article.scandi-card').count();
+    const initialCount = await page.locator('[data-testid="preset-card"]').count();
 
     // Hover over profile card to reveal delete button
-    const profileToDelete = page.locator('article.scandi-card').first();
+    const profileToDelete = page.locator('[data-testid="preset-card"]').first();
     await profileToDelete.hover();
 
     // Set up dialog handler before clicking delete
@@ -142,18 +139,15 @@ test.describe('Profile Management', () => {
     await page.waitForTimeout(1000);
 
     // Profile count should decrease or show empty state
-    const finalCount = await page.locator('article.scandi-card').count();
-    // Scope to the empty-state heading: the same text also appears in the header subtitle
-    const showsEmptyState = await page.getByRole('heading', { name: 'No profiles yet' }).isVisible();
+    const finalCount = await page.locator('[data-testid="preset-card"]').count();
+    const showsEmptyState = await page.getByRole('heading', { name: 'No presets yet' }).isVisible();
 
     expect(finalCount < initialCount || showsEmptyState).toBeTruthy();
   });
 
   test('should show profile count', async ({ page }) => {
-    // The dashboard should show profile count
-    // The header subtitle carries the profile count ("N profile(s) ready to use"),
-    // or the empty-state message when there are none — assert its actual rendered text
-    const countText = page.locator('p.text-lg');
-    await expect(countText).toHaveText(/\d+ profiles? ready to use|^No profiles yet/);
+    // The subtitle under the Presets heading carries the count, or the intro copy when there are none
+    const countText = page.locator('h1:has-text("Presets") + p');
+    await expect(countText).toHaveText(/\d+ presets? ready to apply|^Save a title/);
   });
 });

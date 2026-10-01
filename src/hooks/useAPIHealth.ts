@@ -94,18 +94,18 @@ export const useAPIHealth = () => {
    */
   const getStatusColor = useCallback((): string => {
     if (healthStatus.isChecking) {
-      return 'text-yellow-600';
+      return 'text-amber-400';
     }
     
     if (healthStatus.isAvailable) {
       const responseTime = healthStatus.responseTime;
       if (responseTime && responseTime > 2000) {
-        return 'text-yellow-600'; // Slow but working
+        return 'text-amber-400'; // Slow but working
       }
-      return 'text-green-600'; // Good
+      return 'text-emerald-400'; // Good
     }
     
-    return 'text-red-600'; // Offline/error
+    return 'text-red-400'; // Offline/error
   }, [healthStatus]);
 
   /**

@@ -7,13 +7,15 @@
  * both need the distinction to survive.
  */
 
+import { Link } from 'react-router-dom';
+import { Bot, Lock, TriangleAlert, type LucideIcon } from 'lucide-react';
 import { useAuthState } from '@/hooks/useAuth';
 import { isModelContextSupported } from '@/lib/webmcp/modelContext';
 
 export type AgentControlState = 'active' | 'signed-out' | 'unsupported';
 
 interface AgentControlStateCopy {
-  icon: string;
+  icon: LucideIcon;
   label: string;
   description: string;
   colorClassName: string;
@@ -21,22 +23,22 @@ interface AgentControlStateCopy {
 
 const STATE_COPY: Record<AgentControlState, AgentControlStateCopy> = {
   active: {
-    icon: '🤖',
+    icon: Bot,
     label: 'Agent control active',
     description: 'Your AI agent can switch stream profiles while this page is open.',
-    colorClassName: 'text-green-600',
+    colorClassName: 'text-cyan-400',
   },
   'signed-out': {
-    icon: '🔒',
+    icon: Lock,
     label: 'Sign in to enable agent control',
     description: 'Connect your Twitch account so your AI agent can switch stream profiles.',
-    colorClassName: 'text-neutral-500',
+    colorClassName: 'text-fg-subtle',
   },
   unsupported: {
-    icon: '⚠️',
+    icon: TriangleAlert,
     label: 'Browser unsupported',
-    description: 'Agent control needs a WebMCP-capable browser, e.g. Chrome 146+.',
-    colorClassName: 'text-neutral-500',
+    description: 'Agent control needs a WebMCP-capable browser, e.g. Chrome 150+.',
+    colorClassName: 'text-fg-subtle',
   },
 };
 
@@ -61,24 +63,25 @@ export interface AgentControlIndicatorProps {
 /**
  * Pure presentational indicator. Takes support/auth as props rather than
  * reading the hooks itself, so the three states are directly testable
- * without mocking `navigator.modelContext` or auth.
+ * without mocking `document.modelContext` or auth.
  */
 export function AgentControlIndicator({
   isSupported,
   isAuthenticated,
   className = '',
-}: AgentControlIndicatorProps): JSX.Element {
+}: AgentControlIndicatorProps) {
   const state = getAgentControlState(isSupported, isAuthenticated);
   const copy = STATE_COPY[state];
+  const Icon = copy.icon;
 
   return (
     <div
-      className={`flex items-center space-x-2 ${className}`}
+      className={`flex items-center gap-1.5 ${copy.colorClassName} ${className}`}
       data-agent-control-state={state}
       title={copy.description}
     >
-      <span aria-hidden="true">{copy.icon}</span>
-      <span className={`text-xs font-medium ${copy.colorClassName}`}>{copy.label}</span>
+      <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+      <span className="text-xs font-semibold">{copy.label}</span>
     </div>
   );
 }
@@ -87,14 +90,16 @@ export function AgentControlIndicator({
  * Connected indicator for use in the app — reads live browser support and
  * auth state and hands them to the pure {@link AgentControlIndicator}.
  */
-export default function ConnectedAgentControlIndicator({ className = '' }: { className?: string }): JSX.Element {
+export default function ConnectedAgentControlIndicator({ className = '' }: { className?: string }) {
   const { isAuthenticated } = useAuthState();
 
   return (
-    <AgentControlIndicator
-      isSupported={isModelContextSupported()}
-      isAuthenticated={isAuthenticated}
-      className={className}
-    />
+    <Link to="/webmcp" className="rounded-md px-2 py-1 hover:bg-raised transition-colors" aria-label="WebMCP agent control">
+      <AgentControlIndicator
+        isSupported={isModelContextSupported()}
+        isAuthenticated={isAuthenticated}
+        className={className}
+      />
+    </Link>
   );
 }

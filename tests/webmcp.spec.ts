@@ -4,7 +4,7 @@ import { test, expect, type Page } from '@playwright/test';
  * WebMCP end-to-end coverage (spec deliverable 5, art_H22sCdEk).
  *
  * No real WebMCP-capable browser runs in CI, so these specs stand in for the browser's side of
- * the contract: `navigator.modelContext` is replaced — via `addInitScript`, before the app's own
+ * the contract: `document.modelContext` is replaced — via `addInitScript`, before the app's own
  * script runs — with a minimal registry that records whatever `useWebMCP` registers. "The agent
  * calls a tool" is then invoking the captured `execute` function directly: exactly what a real
  * WebMCP browser does when the user's agent invokes a tool the page registered by name.
@@ -18,20 +18,27 @@ const TOOL_NAMES = ['activate_stream_profile', 'list_stream_profiles', 'update_s
 
 type MockTool = { name: string; execute: (input: Record<string, unknown>) => Promise<unknown> };
 
-/** Installs the mock `navigator.modelContext` registry `useWebMCP` registers tools into. */
+/**
+ * Installs a mock `document.modelContext` in the spec's shape: async `registerTool(tool, { signal })`
+ * that rejects a name already registered, unregistered by aborting the signal. The duplicate check
+ * matters: React StrictMode registers, unregisters, and re-registers on mount, so a leaked
+ * registration would surface here as a rejection.
+ */
 async function mockModelContext(page: Page): Promise<void> {
   await page.addInitScript(() => {
     const tools = new Map<string, MockTool>();
     (window as unknown as { __webmcpTools: Map<string, MockTool> }).__webmcpTools = tools;
 
-    Object.defineProperty(window.navigator, 'modelContext', {
+    Object.defineProperty(document, 'modelContext', {
       configurable: true,
       value: {
-        registerTool: (tool: MockTool) => {
+        registerTool: async (tool: MockTool, options?: { signal?: AbortSignal }) => {
+          if (tools.has(tool.name)) {
+            throw new DOMException(`Tool "${tool.name}" is already registered`, 'InvalidStateError');
+          }
+          if (options?.signal?.aborted) return;
           tools.set(tool.name, tool);
-        },
-        unregisterTool: (name: string) => {
-          tools.delete(name);
+          options?.signal?.addEventListener('abort', () => tools.delete(tool.name));
         },
       },
     });

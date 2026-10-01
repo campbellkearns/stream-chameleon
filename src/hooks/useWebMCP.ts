@@ -59,6 +59,16 @@ export interface UseWebMCPOptions {
   applyProfile?: StreamProfileToolDeps['applyProfile'];
   /** Override category resolution in tests; defaults to `CategoryRepository.search`. */
   resolveCategory?: StreamProfileToolDeps['resolveCategory'];
+  /** Observes every tool execution (for the WebMCP Hub log). Read through a ref, so it needn't be stable. */
+  onToolCall?: (call: ToolCall) => void;
+}
+
+/** One completed tool execution, as reported to `onToolCall`. */
+export interface ToolCall {
+  tool: string;
+  input: Record<string, unknown>;
+  result: unknown;
+  at: number;
 }
 
 /**
@@ -68,9 +78,11 @@ export interface UseWebMCPOptions {
  * the user creates or edits profiles — re-registering on every profile change would churn the
  * browser's registry and risk the agent seeing a momentarily empty tool list.
  */
-export function useWebMCP({ isAuthenticated, profiles, applyProfile, resolveCategory }: UseWebMCPOptions): void {
+export function useWebMCP({ isAuthenticated, profiles, applyProfile, resolveCategory, onToolCall }: UseWebMCPOptions): void {
   const profilesRef = useRef<readonly StreamProfile[]>(profiles);
   profilesRef.current = profiles;
+  const onToolCallRef = useRef(onToolCall);
+  onToolCallRef.current = onToolCall;
 
   const tools = useMemo(
     () =>
@@ -78,7 +90,14 @@ export function useWebMCP({ isAuthenticated, profiles, applyProfile, resolveCate
         getProfiles: () => profilesRef.current,
         applyProfile: applyProfile ?? (profile => getTwitchAPI().applyProfile(profile)),
         resolveCategory: resolveCategory ?? resolveCategoryFromRepository,
-      }),
+      }).map(tool => ({
+        ...tool,
+        execute: async (input: Record<string, unknown>) => {
+          const result = await tool.execute(input);
+          onToolCallRef.current?.({ tool: tool.name, input, result, at: Date.now() });
+          return result;
+        },
+      })),
     [applyProfile, resolveCategory],
   );
 

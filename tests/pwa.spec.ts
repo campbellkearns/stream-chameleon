@@ -114,13 +114,13 @@ test.describe('PWA Features', () => {
   test('should be responsive on mobile viewport', async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
-    await page.goto('/');
+    await page.goto('/presets');
 
     // Wait for page load
-    await page.waitForSelector('h1:has-text("Stream Profiles")');
+    await page.waitForSelector('h1:has-text("Presets")');
 
     // Check that content is visible (not overflowing)
-    const title = page.locator('h1:has-text("Stream Profiles")');
+    const title = page.locator('h1:has-text("Presets")');
     await expect(title).toBeVisible();
 
     // Check that create button is accessible
@@ -131,12 +131,12 @@ test.describe('PWA Features', () => {
   test('should be responsive on tablet viewport', async ({ page }) => {
     // Set tablet viewport
     await page.setViewportSize({ width: 768, height: 1024 });
-    await page.goto('/');
+    await page.goto('/presets');
 
-    await page.waitForSelector('h1:has-text("Stream Profiles")');
+    await page.waitForSelector('h1:has-text("Presets")');
 
     // All main UI elements should be visible
-    const title = page.locator('h1:has-text("Stream Profiles")');
+    const title = page.locator('h1:has-text("Presets")');
     await expect(title).toBeVisible();
   });
 
@@ -148,9 +148,9 @@ test.describe('PWA Features', () => {
     test('should handle touch events on mobile', async ({ page }) => {
       // Set mobile viewport (touch support comes from the test.use above)
       await page.setViewportSize({ width: 375, height: 667 });
-      await page.goto('/');
+      await page.goto('/presets');
 
-      await page.waitForSelector('h1:has-text("Stream Profiles")');
+      await page.waitForSelector('h1:has-text("Presets")');
 
       // Try tapping the create button
       const createButton = page.locator('a[href="/profile/new"]').filter({ visible: true }).first();
