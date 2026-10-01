@@ -11,7 +11,7 @@ export default function Presets() {
     profiles,
     isLoading,
     error,
-    clearError,
+    refreshProfiles,
     deleteProfile,
     activeProfileId,
     applyingProfileId,
@@ -41,7 +41,8 @@ export default function Presets() {
         <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-3" />
         <h3 className="text-lg font-semibold text-fg-strong mb-2">Something went wrong</h3>
         <p className="text-fg-muted mb-6">{error}</p>
-        <button onClick={clearError} className="btn">
+        {/* Re-run the load; clearing the error alone left a false "No presets yet" state */}
+        <button onClick={refreshProfiles} className="btn">
           Try Again
         </button>
       </div>

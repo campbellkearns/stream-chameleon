@@ -38,7 +38,9 @@ test.describe('Dynamic Title Templating', () => {
 
   test('should replace {YYYY-MM-DD} with current date', async ({ page }) => {
     // Get current date in YYYY-MM-DD format
-    const currentDate = new Date().toISOString().split('T')[0];
+    // Local calendar day, matching processTitle (a UTC date drifts a day in the evening west of UTC)
+    const now = new Date();
+    const currentDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
     // Create profile with {YYYY-MM-DD} template
     await page.locator('a[href="/profile/new"]').filter({ visible: true }).first().click();
@@ -55,7 +57,9 @@ test.describe('Dynamic Title Templating', () => {
 
   test('should handle multiple template variables in one title', async ({ page }) => {
     const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-    const currentDate = new Date().toISOString().split('T')[0];
+    // Local calendar day, matching processTitle (a UTC date drifts a day in the evening west of UTC)
+    const now = new Date();
+    const currentDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
     // Create profile with both templates
     await page.locator('a[href="/profile/new"]').filter({ visible: true }).first().click();
@@ -98,8 +102,8 @@ test.describe('Dynamic Title Templating', () => {
     const titleElement = profileCard.locator('[title*="Daily {DAY} Stream"]');
 
     // The title attribute should contain the original template
-    const hasTooltip = await titleElement.count() > 0;
-    expect(hasTooltip).toBeTruthy();
+    // Wait for the async render instead of racing it with a bare count()
+    await expect(titleElement).toBeVisible();
   });
 
   test('should process templates when profile is edited', async ({ page }) => {

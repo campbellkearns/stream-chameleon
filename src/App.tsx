@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import LiveController from './pages/LiveController';
 import Presets from './pages/Presets';
+import WebMCPHub from './pages/WebMCPHub';
 import CreateProfile from './pages/CreateProfile';
 import EditProfile from './pages/EditProfile';
 import AuthPage from './pages/AuthPage';
@@ -35,6 +36,7 @@ function App(): JSX.Element {
       <Route path="/" element={<Layout />}>
         <Route index element={<LiveController />} />
         <Route path="presets" element={<Presets />} />
+        <Route path="webmcp" element={<WebMCPHub />} />
         <Route path="profile/new" element={<CreateProfile />} />
         <Route path="profile/:id/edit" element={<EditProfile />} />
         <Route path="support" element={<SupportPage />} />

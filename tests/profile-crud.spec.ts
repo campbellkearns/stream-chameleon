@@ -15,8 +15,8 @@ test.describe('Profile Management', () => {
   });
 
   test('should create a new profile', async ({ page }) => {
-    // Click "New Preset" button
-    await page.click('a:has-text("New Preset")');
+    // Click "New Preset" — scope to a visible link in case another create link is hidden at this viewport
+    await page.locator('a[href="/profile/new"]').filter({ visible: true }).first().click();
 
     // Wait for create form
     await expect(page).toHaveURL(/\/profile\/new/);
@@ -43,14 +43,14 @@ test.describe('Profile Management', () => {
     // Should redirect to presets
     await expect(page).toHaveURL('/presets', { timeout: 5000 });
 
-    // Profile should appear in the list
-    await expect(page.locator('[data-testid="preset-card"]', { hasText: 'Test Profile' })).toBeVisible();
+    // Match the card's name heading only, since 'Test Profile' is also a substring of the description
+    await expect(page.locator('[data-testid="preset-card"]').getByRole('heading', { name: 'Test Profile' })).toBeVisible();
   });
 
   test('should list existing profiles', async ({ page }) => {
     // Check if we have profiles or empty state
     const hasProfiles = await page.locator('[data-testid="preset-card"]').count() > 0;
-    const hasEmptyState = await page.locator('text=No presets yet').isVisible();
+    const hasEmptyState = await page.getByRole('heading', { name: 'No presets yet' }).isVisible();
 
     // Either we should see profiles or the empty state
     expect(hasProfiles || hasEmptyState).toBeTruthy();
@@ -140,14 +140,14 @@ test.describe('Profile Management', () => {
 
     // Profile count should decrease or show empty state
     const finalCount = await page.locator('[data-testid="preset-card"]').count();
-    const showsEmptyState = await page.locator('text=No presets yet').isVisible();
+    const showsEmptyState = await page.getByRole('heading', { name: 'No presets yet' }).isVisible();
 
     expect(finalCount < initialCount || showsEmptyState).toBeTruthy();
   });
 
   test('should show profile count', async ({ page }) => {
-    // The presets page should show the preset count
-    const countText = page.locator('text=/\\d+ preset/i, text=No presets yet');
-    await expect(countText).toBeVisible();
+    // The subtitle under the Presets heading carries the count, or the intro copy when there are none
+    const countText = page.locator('h1:has-text("Presets") + p');
+    await expect(countText).toHaveText(/\d+ presets? ready to apply|^Save a title/);
   });
 });

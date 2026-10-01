@@ -39,16 +39,19 @@ export const useCategories = () => {
     try {
       const result = await categoryRepository.getAll();
       
-      if (result.success && result.data) {
+      if (result.success && result.data && result.data.length > 0) {
         setCategories(result.data);
         setLoadingState({ isLoading: false, error: null, isSearching: false });
       } else {
-        // If no cached categories, load defaults
+        // Empty cache is a miss on a fresh install: seed the defaults so
+        // they persist, then show them. A storage error also lands here —
+        // show the defaults and surface the failure.
         const defaultCategories = categoryRepository.getDefaultCategories();
+        const seeded = await categoryRepository.seedDefaults(defaultCategories);
         setCategories(defaultCategories);
         setLoadingState({
           isLoading: false,
-          error: result.error?.message || null,
+          error: (!seeded.success && seeded.error?.message) || result.error?.message || null,
           isSearching: false
         });
       }
@@ -203,8 +206,14 @@ export const useCategorySearch = (debounceMs: number = 300) => {
 
   // Debounced search effect
   useEffect(() => {
+    // Discard stale responses: when the query changes (or the component
+    // unmounts), this effect's cleanup flips `ignore`, so an earlier, slower
+    // search can no longer overwrite the latest query's results.
+    let ignore = false;
+
     if (!query.trim()) {
       setResults(categories.slice(0, 10)); // Show first 10 when no query
+      setIsSearching(false); // No search is in flight for an empty query
       return;
     }
 
@@ -212,16 +221,23 @@ export const useCategorySearch = (debounceMs: number = 300) => {
     const timeoutId = setTimeout(async () => {
       try {
         const searchResults = await searchCategories(query);
+        if (ignore) return;
         setResults(searchResults.slice(0, 10)); // Limit results
       } catch (error) {
         console.error('Search error:', error);
+        if (ignore) return;
         setResults([]);
       } finally {
-        setIsSearching(false);
+        if (!ignore) {
+          setIsSearching(false);
+        }
       }
     }, debounceMs);
 
-    return () => clearTimeout(timeoutId);
+    return () => {
+      ignore = true;
+      clearTimeout(timeoutId);
+    };
   }, [query, searchCategories, categories, debounceMs]);
 
   return {

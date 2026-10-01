@@ -15,7 +15,9 @@ export type {
   ProfileValidationResult,
   ProfileValidationError,
   ProcessedTitle,
-  ProfileExport
+  ProfileExport,
+  SentChannelPayload,
+  ApplyRecord
 } from './Profile';
 
 export {

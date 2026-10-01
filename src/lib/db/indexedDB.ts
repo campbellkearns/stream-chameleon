@@ -63,6 +63,21 @@ export class IndexedDBWrapper {
         if (!db.objectStoreNames.contains(STORAGE_KEYS.PREFERENCES_STORE)) {
           db.createObjectStore(STORAGE_KEYS.PREFERENCES_STORE, { keyPath: 'key' });
         }
+
+        // Create apply history store (added in DB v2 — additive migration:
+        // guarded create so v1 databases upgrade without touching existing
+        // stores, and fresh installs get every store in one pass)
+        if (!db.objectStoreNames.contains(STORAGE_KEYS.APPLY_HISTORY_STORE)) {
+          const historyStore = db.createObjectStore(STORAGE_KEYS.APPLY_HISTORY_STORE, { keyPath: 'id' });
+          historyStore.createIndex('appliedAt', 'appliedAt', { unique: false });
+          historyStore.createIndex('profileId', 'profileId', { unique: false });
+        }
+      };
+
+      request.onblocked = () => {
+        // Another connection holds an older version and blocks the upgrade;
+        // the open can still succeed once it closes, so only log.
+        console.warn(`IndexedDB open blocked for "${this.dbName}": close other tabs using an older version`);
       };
     });
   }
@@ -205,9 +220,16 @@ export const getDB = async (): Promise<IndexedDBWrapper> => {
     return instance;
   })();
 
-  const instance = await initPromise;
-  initPromise = null;
-  return instance;
+  try {
+    const instance = await initPromise;
+    return instance;
+  } finally {
+    // Always clear the in-flight promise once it settles. On success this
+    // preserves the old behavior (dbInstance is set anyway); on a failed open
+    // it prevents the rejection from being cached forever, so the next
+    // getDB() call re-attempts initialization instead of rejecting too.
+    initPromise = null;
+  }
 };
 
 /**

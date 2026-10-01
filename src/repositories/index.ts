@@ -19,17 +19,26 @@ export {
   resetCategoryRepository 
 } from './CategoryRepository';
 
+// Apply History Repository
+export {
+  ApplyHistoryRepository,
+  getApplyHistoryRepository,
+  resetApplyHistoryRepository
+} from './ApplyHistoryRepository';
+
 // Repository Result Type (shared interface)
 export type { RepositoryResult } from './ProfileRepository';
 
 // Import the functions for internal use
 import { getProfileRepository, resetProfileRepository } from './ProfileRepository';
 import { getCategoryRepository, resetCategoryRepository } from './CategoryRepository';
+import { getApplyHistoryRepository, resetApplyHistoryRepository } from './ApplyHistoryRepository';
 
 // Convenience exports for common operations
 export const repositories = {
   profiles: getProfileRepository,
-  categories: getCategoryRepository
+  categories: getCategoryRepository,
+  applyHistory: getApplyHistoryRepository
 } as const;
 
 /**
@@ -72,4 +81,5 @@ export async function initializeRepositories(): Promise<{
 export function resetAllRepositories(): void {
   resetProfileRepository();
   resetCategoryRepository();
+  resetApplyHistoryRepository();
 }

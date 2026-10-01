@@ -16,7 +16,7 @@ export const APP_CONFIG = {
   DESCRIPTION: 'One-click stream profile management for Twitch streamers',
   /** GitHub repository URL */
   /** TODO: update URL when GitHub repo is renamed */
-  REPOSITORY: 'https://github.com/campbellkearns/scratch-my-twitch'
+  REPOSITORY: 'https://github.com/campbellkearns/stream-chameleon'
 } as const;
 
 /**
@@ -68,7 +68,14 @@ export const API_CONFIG = {
   /** Delay between retries in milliseconds */
   RETRY_DELAY: 1000,
   /** Rate limit buffer (requests per minute) */
-  RATE_LIMIT_BUFFER: 50
+  RATE_LIMIT_BUFFER: 50,
+  /**
+   * Minimum interval (ms) between automatic channel-status refreshes
+   * (mount / window focus / visibilitychange) — the C2 spec's 30s throttle
+   * floor. RATE_LIMIT_BUFFER is a per-minute request quota, not an interval,
+   * so the spec's explicit 30s minimum applies.
+   */
+  CHANNEL_STATUS_MIN_INTERVAL: 30_000
 } as const;
 
 /**
@@ -78,7 +85,7 @@ export const STORAGE_KEYS = {
   /** IndexedDB database name */
   DB_NAME: 'StreamChameleonDB',
   /** Database version */
-  DB_VERSION: 1,
+  DB_VERSION: 2,
   /** Profiles object store */
   PROFILES_STORE: 'profiles',
   /** Categories cache store */
@@ -86,7 +93,9 @@ export const STORAGE_KEYS = {
   /** Auth tokens store */
   AUTH_STORE: 'auth',
   /** User preferences store */
-  PREFERENCES_STORE: 'preferences'
+  PREFERENCES_STORE: 'preferences',
+  /** Apply history store (added in DB v2) */
+  APPLY_HISTORY_STORE: 'applyHistory'
 } as const;
 
 /**

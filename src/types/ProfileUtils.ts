@@ -11,10 +11,45 @@ import {
   ProfileValidationResult, 
   ProfileValidationError,
   ProcessedTitle,
+  StreamCategory,
+  ApplyRecord,
   PROFILE_VALIDATION_ERRORS,
   TITLE_TEMPLATES,
   PRESET_ACCENTS
 } from '../types/Profile';
+
+/**
+ * Manual categories
+ *
+ * Categories typed by hand in the dropdown have no real Twitch id. They are
+ * marked at creation (manual flag + 'manual:' id prefix) so the Twitch API
+ * layer can keep synthetic ids off the wire — Twitch rejects non-numeric
+ * game_id values.
+ */
+
+/** Prefix identifying manually-entered category ids */
+export const MANUAL_CATEGORY_ID_PREFIX = 'manual:';
+
+/**
+ * Build the synthetic id for a manually-entered category
+ */
+export function manualCategoryId(name: string): string {
+  return `${MANUAL_CATEGORY_ID_PREFIX}${name.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+}
+
+/**
+ * Check whether a category is a manual entry with no real Twitch id.
+ *
+ * Beyond the explicit marker, any non-numeric id counts as manual so legacy
+ * synthetic entries (created before marking existed) can never reach Twitch.
+ */
+export function isManualCategory(category: StreamCategory): boolean {
+  return (
+    category.manual === true ||
+    category.id.startsWith(MANUAL_CATEGORY_ID_PREFIX) ||
+    !/^\d+$/.test(category.id)
+  );
+}
 
 /**
  * Generate a UUID v4
@@ -44,6 +79,21 @@ export function createProfile(input: CreateProfileInput): StreamProfile {
     accent: input.accent,
     createdAt: now,
     updatedAt: now
+  };
+}
+
+/**
+ * Create an apply-history record with generated ID and timestamp.
+ * Mirrors createProfile: the caller supplies the domain fields, this owns
+ * the generated ones (UUID v4 id, epoch-ms appliedAt).
+ */
+export function createApplyRecord(
+  input: Omit<ApplyRecord, 'id' | 'appliedAt'>
+): ApplyRecord {
+  return {
+    ...input,
+    id: generateUUID(),
+    appliedAt: Date.now()
   };
 }
 
@@ -183,7 +233,8 @@ export function processTitle(template: string): ProcessedTitle {
 
   // Replace date template
   if (processed.includes(TITLE_TEMPLATES.DATE)) {
-    const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+    // Local calendar day so {YYYY-MM-DD} agrees with {DAY} near midnight in non-UTC timezones
+    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`; // YYYY-MM-DD
     replacements[TITLE_TEMPLATES.DATE] = dateStr;
     processed = processed.replace(new RegExp(escapeRegExp(TITLE_TEMPLATES.DATE), 'g'), dateStr);
   }

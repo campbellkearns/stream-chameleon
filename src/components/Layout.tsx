@@ -1,14 +1,16 @@
 import { Outlet, Link, NavLink } from 'react-router-dom'
 import { useState } from 'react'
-import { Radio, Layers, LogOut, Link2, Zap } from 'lucide-react'
+import { Radio, Layers, Bot, LogOut, Link2, Zap } from 'lucide-react'
 import { useAuthState } from '@/hooks/useAuth'
 import { getTwitchAuth } from '@/lib/auth/twitchAuth'
 import { StreamControlProvider, useStreamControl } from '@/hooks/useStreamControl'
 import { presetIcon } from '@/lib/presetStyle'
+import AgentControlIndicator from '@/components/AgentControlIndicator'
 
 const TABS = [
   { to: '/', label: 'Live', icon: Radio, end: true },
   { to: '/presets', label: 'Presets', icon: Layers, end: false },
+  { to: '/webmcp', label: 'WebMCP', icon: Bot, end: false },
 ]
 
 const MAX_QUICK_MORPH_CHIPS = 5
@@ -119,7 +121,12 @@ export default function Layout() {
               <span className="text-base sm:text-lg font-semibold tracking-tight whitespace-nowrap">Stream Chameleon</span>
             </Link>
 
-            <AccountControls />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="hidden md:block">
+                <AgentControlIndicator />
+              </span>
+              <AccountControls />
+            </div>
           </div>
         </header>
 

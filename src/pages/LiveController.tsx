@@ -7,6 +7,7 @@ import { useStreamControl } from '@/hooks/useStreamControl'
 import { useAuthState } from '@/hooks/useAuth'
 import { CategorySearchDropdown } from '@/components/CategorySearchDropdown'
 import { RecentCategoryGrid } from '@/components/RecentCategoryGrid'
+import { RecentApplicationsStrip } from '@/components/RecentApplicationsStrip'
 import { presetAccent, presetIcon } from '@/lib/presetStyle'
 import { processTitle, titleHasTemplates } from '@/types/ProfileUtils'
 
@@ -358,6 +359,11 @@ function PresetQuickList() {
   )
 }
 
+function ApplyHistory() {
+  const { history, onReplaySuccess } = useStreamControl()
+  return <RecentApplicationsStrip history={history} onReplaySuccess={onReplaySuccess} />
+}
+
 export default function LiveController() {
   return (
     <div className="space-y-6">
@@ -371,8 +377,9 @@ export default function LiveController() {
           <ChannelMonitor />
           <BroadcastEditor />
         </div>
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-4 space-y-6">
           <PresetQuickList />
+          <ApplyHistory />
         </div>
       </div>
     </div>

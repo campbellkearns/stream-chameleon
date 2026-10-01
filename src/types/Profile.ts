@@ -15,6 +15,8 @@ export interface StreamCategory {
   name: string;
   /** Optional box art URL for UI display */
   boxArtUrl?: string;
+  /** True when the entry was typed manually and has no real Twitch id */
+  manual?: boolean;
 }
 
 /**
@@ -157,4 +159,45 @@ export interface ProfileExport {
   version: string;
   exportedAt: Date;
   profiles: StreamProfile[];
+}
+
+/**
+ * The payload exactly as it was sent to Twitch on an apply — stored wire
+ * truth, not live profile state. History rows replay this payload as-is;
+ * profile edits or deletions never rewrite what Twitch actually received.
+ */
+export interface SentChannelPayload {
+  /** Stream title after processTitle() template expansion */
+  title: string;
+  /** Tags as capped for the wire (maximum 10) */
+  tags: string[];
+  /** null ⇒ manual category: nothing was sent as game_id */
+  gameId: string | null;
+  /** Category name for display only — never sent as an id */
+  categoryName: string;
+}
+
+/**
+ * One apply attempt recorded in the apply-history store (DB v2)
+ *
+ * Records are written on both success and failure paths: a failed attempt is
+ * evidence the streamer tried, but it exposes no actions downstream.
+ */
+export interface ApplyRecord {
+  /** Unique identifier (UUID v4, same generator as profiles) */
+  id: string;
+  /** Owning profile — null when the payload came from a reverted record */
+  profileId: string | null;
+  /** Profile name at apply time (display survives profile deletion) */
+  profileName: string;
+  /** What was sent to Twitch (or would have been, on a failed attempt) */
+  payload: SentChannelPayload;
+  /** Which surface produced the attempt ('edit' = ad-hoc Live or agent update, no saved profile) */
+  source: 'apply' | 'apply-again' | 'revert' | 'edit';
+  /** Outcome of the attempt */
+  result: 'success' | 'failed';
+  /** Present when result === 'failed' */
+  error?: string;
+  /** Epoch ms — orders the strip and drives pruning */
+  appliedAt: number;
 }

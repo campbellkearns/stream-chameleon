@@ -426,6 +426,14 @@ export class CategoryRepository {
       { id: '33214', name: 'Fortnite' }
     ];
   }
+
+  /**
+   * Seed the cache with the default categories (used when the cache is
+   * empty, e.g. on a fresh install)
+   */
+  async seedDefaults(categories: StreamCategory[]): Promise<RepositoryResult<void>> {
+    return this.cacheCategories(categories);
+  }
 }
 
 // Singleton instance

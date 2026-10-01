@@ -140,22 +140,28 @@ test.describe('PWA Features', () => {
     await expect(title).toBeVisible();
   });
 
-  test('should handle touch events on mobile', async ({ page }) => {
-    // Set mobile viewport and touch support
-    await page.setViewportSize({ width: 375, height: 667 });
-    await page.goto('/presets');
+  // tap() requires touch support, which the desktop projects don't enable —
+  // opt this test into a touch-enabled context so the tap works on every project
+  test.describe('touch events', () => {
+    test.use({ hasTouch: true });
 
-    await page.waitForSelector('h1:has-text("Presets")');
+    test('should handle touch events on mobile', async ({ page }) => {
+      // Set mobile viewport (touch support comes from the test.use above)
+      await page.setViewportSize({ width: 375, height: 667 });
+      await page.goto('/presets');
 
-    // Try tapping the create button
-    const createButton = page.locator('a[href="/profile/new"]').filter({ visible: true }).first();
+      await page.waitForSelector('h1:has-text("Presets")');
 
-    if (await createButton.isVisible()) {
-      await createButton.tap();
+      // Try tapping the create button
+      const createButton = page.locator('a[href="/profile/new"]').filter({ visible: true }).first();
 
-      // Should navigate to create page
-      await expect(page).toHaveURL(/\/profile\/new/);
-    }
+      if (await createButton.isVisible()) {
+        await createButton.tap();
+
+        // Should navigate to create page
+        await expect(page).toHaveURL(/\/profile\/new/);
+      }
+    });
   });
 
   test('should have proper SEO meta tags', async ({ page }) => {
@@ -190,13 +196,9 @@ test.describe('Service Worker', () => {
       return false;
     });
 
-    // Note: This test will fail until EXE-24 is fixed
-    // (Service Worker registration is missing)
-    // expect(swRegistered).toBeTruthy();
-
-    // For now, just check if service worker API is available
-    const swSupported = await page.evaluate(() => 'serviceWorker' in navigator);
-    expect(swSupported).toBeTruthy();
+    // Runs only on the pwa-preview project, where the production build
+    // registers the service worker — dev serves none.
+    expect(swRegistered).toBeTruthy();
   });
 
   test('should have service worker API available', async ({ page }) => {

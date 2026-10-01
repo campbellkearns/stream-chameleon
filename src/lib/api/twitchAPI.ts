@@ -7,7 +7,7 @@
 
 import { getTwitchAuth } from '@/lib/auth/twitchAuth';
 import { getCategoryRepository } from '@/repositories/CategoryRepository';
-import { processTitle } from '@/types/ProfileUtils';
+import { isManualCategory, processTitle } from '@/types/ProfileUtils';
 import type { 
   TwitchAPIHealthCheck,
   TwitchGameResponse,
@@ -19,7 +19,7 @@ import type {
   TwitchRateLimit,
   CachedCategory
 } from '@/types/TwitchAPI';
-import type { StreamProfile } from '@/types/Profile';
+import type { StreamProfile, SentChannelPayload } from '@/types/Profile';
 import { TWITCH_ENDPOINTS, TWITCH_CONFIG, API_CONFIG, FEATURE_FLAGS } from '@/types/constants';
 
 /**
@@ -46,6 +46,24 @@ export interface StreamUpdateRequest {
 }
 
 /**
+ * Build the exact payload an apply sends to Twitch: processed title, tags
+ * capped at 10, and game_id omitted for manual categories. Takes a profile
+ * or an ad-hoc Live edit, which share the same title/category/tags shape. The PATCH body
+ * and apply-history records both derive from this function, so stored wire
+ * truth has exactly one construction site and can never drift from the wire.
+ */
+export const buildSentPayload = (profile: Pick<StreamProfile, 'title' | 'category' | 'tags'>): SentChannelPayload => {
+  const processedTitle = processTitle(profile.title);
+
+  return {
+    title: processedTitle.processed,
+    tags: profile.tags.slice(0, 10), // Ensure max 10 tags
+    gameId: isManualCategory(profile.category) ? null : profile.category.id,
+    categoryName: profile.category.name
+  };
+};
+
+/**
  * Twitch API Client for stream management operations
  */
 export class TwitchAPIClient {
@@ -67,21 +85,30 @@ export class TwitchAPIClient {
 
   /**
    * Apply a stream profile to update channel information
+   *
+   * Builds the wire payload in one place and PATCHes it. The replay surface
+   * (Apply-again / Revert) calls applySentPayload directly with the stored
+   * payload, so a replay can never drift from a re-derived body.
    */
-  async applyProfile(profile: StreamProfile): Promise<APIResult<boolean>> {
-    this.log('Applying profile to Twitch', { profileName: profile.name });
-
-    return this.updateChannel({
-      game_id: profile.category.id,
-      title: processTitle(profile.title).processed,
-      tags: profile.tags
-    });
+  async applyProfile(profile: StreamProfile): Promise<APIResult<SentChannelPayload>> {
+    return this.patchChannel(buildSentPayload(profile), profile.name);
   }
 
   /**
-   * Update the authenticated broadcaster's channel information
+   * Re-apply a recorded wire-truth payload exactly as stored — never
+   * re-derived from the profile's current state, which may have been edited
+   * or deleted since the record was written.
    */
-  async updateChannel(request: UpdateChannelRequest): Promise<APIResult<boolean>> {
+  async applySentPayload(payload: SentChannelPayload, profileName: string): Promise<APIResult<SentChannelPayload>> {
+    return this.patchChannel(payload, profileName);
+  }
+
+  /**
+   * The single place a channel PATCH body is built and sent. game_id is
+   * omitted when the payload's gameId is null (manual category) so it never
+   * reaches Twitch on any path — live apply or replay.
+   */
+  private async patchChannel(payload: SentChannelPayload, profileName: string): Promise<APIResult<SentChannelPayload>> {
     try {
       // Get authenticated user and token
       const [user, token] = await Promise.all([
@@ -100,11 +127,19 @@ export class TwitchAPIClient {
       }
 
       const updateRequest: UpdateChannelRequest = {
-        ...request,
-        tags: request.tags?.slice(0, 10) // Ensure max 10 tags
+        title: payload.title,
+        tags: payload.tags
       };
 
-      this.log('Updating channel', { userId: user.id, updateRequest });
+      if (payload.gameId !== null) {
+        updateRequest.game_id = payload.gameId;
+      }
+
+      this.log('Applying profile to Twitch', { 
+        profileName,
+        userId: user.id,
+        updateRequest 
+      });
 
       // Make API request to update channel
       const response = await fetch(
@@ -136,16 +171,16 @@ export class TwitchAPIClient {
         };
       }
 
-      this.log('Stream updated successfully');
+      this.log('Stream updated successfully', { profileName });
 
       return {
         success: true,
-        data: true,
+        data: payload,
         rateLimit
       };
 
     } catch (error) {
-      this.logError('Error updating channel', error);
+      this.logError('Error applying profile', error);
       
       if (error instanceof Error && error.name === 'AbortError') {
         return {
@@ -514,7 +549,7 @@ export const getTwitchAPI = (): TwitchAPIClient => TwitchAPIClient.getInstance()
 /**
  * Apply a stream profile
  */
-export const applyStreamProfile = (profile: StreamProfile): Promise<APIResult<boolean>> => 
+export const applyStreamProfile = (profile: StreamProfile): Promise<APIResult<SentChannelPayload>> => 
   getTwitchAPI().applyProfile(profile);
 
 /**

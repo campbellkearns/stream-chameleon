@@ -9,10 +9,10 @@
 export { 
   useProfiles, 
   useProfile, 
-  useProfileValidation, 
-  useProfileStats,
   useRepositoryHealth
 } from './useProfiles';
+
+// Channel Status Hooks
 
 // Category Management Hooks
 export { 
@@ -20,6 +20,11 @@ export {
   useCategorySearch, 
   useCategoryValidation 
 } from './useCategories';
+
+// Apply History Hooks
+export {
+  useApplyHistory
+} from './useApplyHistory';
 
 // Authentication Hooks
 export {
@@ -33,14 +38,15 @@ export const hooks = {
   // Profile hooks
   useProfiles,
   useProfile,
-  useProfileValidation,
-  useProfileStats,
   useRepositoryHealth,
   
   // Category hooks
   useCategories,
   useCategorySearch,
   useCategoryValidation,
+  
+  // Apply history hooks
+  useApplyHistory,
   
   // Auth hooks
   useAuth,

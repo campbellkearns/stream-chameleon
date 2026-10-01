@@ -183,19 +183,6 @@ export const getTwitchStatusURL = (): string => {
 };
 
 /**
- * Format response time for display
- */
-export const formatResponseTime = (ms: number | null): string => {
-  if (!ms) return 'Unknown';
-  
-  if (ms < 100) return `${ms}ms (excellent)`;
-  if (ms < 500) return `${ms}ms (good)`;
-  if (ms < 1000) return `${ms}ms (fair)`;
-  if (ms < 2000) return `${ms}ms (slow)`;
-  return `${ms}ms (very slow)`;
-};
-
-/**
  * Get user-friendly error message with suggestions
  */
 export const getErrorMessageWithSuggestion = (error: string | null): string => {
